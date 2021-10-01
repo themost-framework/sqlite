@@ -10,3 +10,6 @@ node_modules
 # test
 spec
 .env
+
+# github
+.github
