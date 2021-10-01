@@ -1,6 +1,6 @@
 {
   "name": "@themost/sqlite",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "MOST Web Framework 2.0 - SQLite data adapter",
   "main": "index.js",
   "types": "index.d.ts",
@@ -13,14 +13,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/themost-framework/themost-sqlite.git"
+    "url": "git+https://github.com/themost-framework/sqlite.git"
   },
   "author": "Kyriakos Barbounakis <k.barbounakis@gmail.com>",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/themost-framework/themost-sqlite/issues"
+    "url": "https://github.com/themost-framework/sqlite/issues"
   },
-  "homepage": "https://github.com/themost-framework/themost-sqlite#readme",
+  "homepage": "https://github.com/themost-framework/sqlite#readme",
   "dependencies": {
     "async": "0.2.10",
     "sqlite3": "^5.0.2"
@@ -29,7 +29,7 @@
     "node": ">=8"
   },
   "devDependencies": {
-    "@themost/common": ">=2.5.0 < 3",
+    "@themost/common": "^2.5.6",
     "@themost/query": ">=2.5.0 < 3",
     "dotenv": "^8.2.0",
     "jasmine": "^3.5.0",
