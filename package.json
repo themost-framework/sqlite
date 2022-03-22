@@ -22,8 +22,8 @@
   },
   "homepage": "https://github.com/themost-framework/sqlite#readme",
   "dependencies": {
-    "async": "0.2.10",
-    "sqlite3": "^5.0.2"
+    "@themost/sqlite3": "^6.0.1",
+    "async": "0.2.10"
   },
   "engines": {
     "node": ">=8"
