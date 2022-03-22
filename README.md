@@ -1,8 +1,5 @@
 ![test](https://github.com/themost-framework/sqlite/workflows/test/badge.svg)
 [![npm](https://img.shields.io/npm/v/@themost%2Fsqlite.svg)](https://www.npmjs.com/package/@themost%2Fsqlite)
-![](https://img.shields.io/david/themost-framework/sqlite)
-![](https://img.shields.io/david/peer/themost-framework/sqlite)
-![](https://img.shields.io/david/dev/themost-framework/sqlite)
 ![GitHub top language](https://img.shields.io/github/languages/top/themost-framework/sqlite)
 [![License](https://img.shields.io/npm/l/@themost/sqlite)](https://github.com/themost-framework/sqlite/blob/master/LICENSE)
 ![GitHub last commit](https://img.shields.io/github/last-commit/themost-framework/sqlite)
