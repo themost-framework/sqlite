@@ -34,6 +34,6 @@
     "@themost/query": ">=2.5.9 < 3",
     "dotenv": "^8.2.0",
     "jasmine": "^3.5.0",
-    "jasmine-spec-reporter": "^5.0.2"
+    "jasmine-spec-reporter": "^7.0.0"
   }
 }
