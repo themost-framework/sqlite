@@ -5,7 +5,7 @@ const util = require('util');
 const {TraceUtils} = require('@themost/common');
 const { QueryExpression, QueryField, SqlUtils } = require('@themost/query');
 const { SqliteFormatter } = require('./SqliteFormatter');
-const sqlite = require('@themost/sqlite3');
+const sqlite = require('sqlite3');
 const sqlite3 = sqlite.verbose();
 const SqlDateRegEx = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d+\+[0-1][0-9]:[0-5][0-9]$/;
 /**

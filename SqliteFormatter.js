@@ -36,11 +36,6 @@ class SqliteFormatter extends SqlFormatter {
             forceAlias: true
         };
     }
-    escapeName(name) {
-        if (typeof name === 'string')
-            return name.replace(/(\w+)/ig, this.settings.nameFormat);
-        return name;
-    }
     /**
      * Escapes an object or a value and returns the equivalent sql value.
      * @param {*} value - A value that is going to be escaped for SQL statements
