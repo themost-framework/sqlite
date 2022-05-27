@@ -1,7 +1,7 @@
-// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2021, THEMOST LP
+// MOST Web Framework Codename Zero Gravity Copyright (c) 2017-2022, THEMOST LP
 
-const util = require('util');
-const { SqlFormatter } = require('@themost/query');
+import { sprintf } from 'sprintf-js';
+import { SqlFormatter } from '@themost/query';
 
 const REGEXP_SINGLE_QUOTE=/\\'/g;
 const SINGLE_QUOTE_ESCAPE ='\'\'';
@@ -86,7 +86,7 @@ class SqliteFormatter extends SqlFormatter {
      * @returns {string}
      */
     $indexof(p0, p1) {
-        return util.format('(INSTR(%s,%s)-1)', this.escape(p0), this.escape(p1));
+        return sprintf('(INSTR(%s,%s)-1)', this.escape(p0), this.escape(p1));
     }
     /**
      * Implements indexOf(str,substr) expression formatter.
@@ -95,7 +95,7 @@ class SqliteFormatter extends SqlFormatter {
      * @returns {string}
      */
     $indexOf(p0, p1) {
-        return util.format('(INSTR(%s,%s)-1)', this.escape(p0), this.escape(p1));
+        return sprintf('(INSTR(%s,%s)-1)', this.escape(p0), this.escape(p1));
     }
     /**
      * Implements contains(a,b) expression formatter.
@@ -104,7 +104,7 @@ class SqliteFormatter extends SqlFormatter {
      * @returns {string}
      */
     $text(p0, p1) {
-        return util.format('(INSTR(%s,%s)-1)>=0', this.escape(p0), this.escape(p1));
+        return sprintf('(INSTR(%s,%s)-1)>=0', this.escape(p0), this.escape(p1));
     }
     /**
      * Implements simple regular expression formatter. Important Note: SQLite 3 does not provide a core sql function for regular expression matching.
@@ -128,7 +128,7 @@ class SqliteFormatter extends SqlFormatter {
         else {
             s1 += '%';
         }
-        return util.format('LIKE(\'%s\',%s) >= 1', s1, this.escape(p0));
+        return sprintf('LIKE(\'%s\',%s) >= 1', s1, this.escape(p0));
     }
     /**
      * Implements concat(a,b) expression formatter.
@@ -137,7 +137,7 @@ class SqliteFormatter extends SqlFormatter {
      * @returns {string}
      */
     $concat(p0, p1) {
-        return util.format('(IFNULL(%s,\'\') || IFNULL(%s,\'\'))', this.escape(p0), this.escape(p1));
+        return sprintf('(IFNULL(%s,\'\') || IFNULL(%s,\'\'))', this.escape(p0), this.escape(p1));
     }
     /**
      * Implements substring(str,pos) expression formatter.
@@ -148,9 +148,9 @@ class SqliteFormatter extends SqlFormatter {
      */
     $substring(p0, pos, length) {
         if (length)
-            return util.format('SUBSTR(%s,%s,%s)', this.escape(p0), pos.valueOf() + 1, length.valueOf());
+            return sprintf('SUBSTR(%s,%s,%s)', this.escape(p0), pos.valueOf() + 1, length.valueOf());
         else
-            return util.format('SUBSTR(%s,%s)', this.escape(p0), pos.valueOf() + 1);
+            return sprintf('SUBSTR(%s,%s)', this.escape(p0), pos.valueOf() + 1);
     }
     /**
      * Implements substring(str,pos) expression formatter.
@@ -161,9 +161,9 @@ class SqliteFormatter extends SqlFormatter {
      */
     $substr(p0, pos, length) {
         if (length)
-            return util.format('SUBSTR(%s,%s,%s)', this.escape(p0), pos.valueOf() + 1, length.valueOf());
+            return sprintf('SUBSTR(%s,%s,%s)', this.escape(p0), pos.valueOf() + 1, length.valueOf());
         else
-            return util.format('SUBSTR(%s,%s)', this.escape(p0), pos.valueOf() + 1);
+            return sprintf('SUBSTR(%s,%s)', this.escape(p0), pos.valueOf() + 1);
     }
     /**
      * Implements length(a) expression formatter.
@@ -171,10 +171,10 @@ class SqliteFormatter extends SqlFormatter {
      * @returns {string}
      */
     $length(p0) {
-        return util.format('LENGTH(%s)', this.escape(p0));
+        return sprintf('LENGTH(%s)', this.escape(p0));
     }
     $ceiling(p0) {
-        return util.format('CEIL(%s)', this.escape(p0));
+        return sprintf('CEIL(%s)', this.escape(p0));
     }
     $startswith(p0, p1) {
         //validate params
@@ -194,14 +194,39 @@ class SqliteFormatter extends SqlFormatter {
             return '';
         return 'LIKE(\'%' + this.escape(p1, true) + '\',' + this.escape(p0) + ')';
     }
-    $day(p0) { return 'CAST(strftime(\'%d\', ' + this.escape(p0) + ') AS INTEGER)'; }
-    $dayOfMonth(p0) { return 'CAST(strftime(\'%d\', ' + this.escape(p0) + ') AS INTEGER)'; }
-    $month(p0) { return 'CAST(strftime(\'%m\', ' + this.escape(p0) + ') AS INTEGER)'; }
-    $year(p0) { return 'CAST(strftime(\'%Y\', ' + this.escape(p0) + ') AS INTEGER)'; }
-    $hour(p0) { return 'CAST(strftime(\'%H\', ' + this.escape(p0) + ') AS INTEGER)'; }
-    $minute(p0) { return 'CAST(strftime(\'%M\', ' + this.escape(p0) + ') AS INTEGER)'; }
-    $second(p0) { return 'CAST(strftime(\'%S\', ' + this.escape(p0) + ') AS INTEGER)'; }
-    $date(p0) { return 'date(' + this.escape(p0) + ')'; }
+    $day(p0) {
+        return 'CAST(strftime(\'%d\', ' + this.escape(p0) + ') AS INTEGER)';
+    }
+    $dayOfMonth(p0) {
+        return 'CAST(strftime(\'%d\', ' + this.escape(p0) + ') AS INTEGER)';
+    }
+    $month(p0) {
+        return 'CAST(strftime(\'%m\', ' + this.escape(p0) + ') AS INTEGER)';
+    }
+    $year(p0) {
+        return 'CAST(strftime(\'%Y\', ' + this.escape(p0) + ') AS INTEGER)';
+    }
+    $hour(p0) {
+        return 'CAST(strftime(\'%H\', ' + this.escape(p0) + ') AS INTEGER)';
+    }
+    $hours(p0) {
+        return this.$hour(p0);
+    }
+    $minute(p0) {
+        return 'CAST(strftime(\'%M\', ' + this.escape(p0) + ') AS INTEGER)';
+    }
+    $minutes(p0) {
+        return this.$minute(p0);
+    }
+    $second(p0) {
+        return 'CAST(strftime(\'%S\', ' + this.escape(p0) + ') AS INTEGER)';
+    }
+    $seconds(p0) {
+        return this.$second(p0);
+    }
+    $date(p0) {
+        return 'date(' + this.escape(p0) + ')';
+    }
 }
 
 export {

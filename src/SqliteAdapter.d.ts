@@ -1,5 +1,7 @@
 // MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2021, THEMOST LP
 
+import { DataAdapterBase, DataAdapterIndexes, DataAdapterTable, DataAdapterView } from '@themost/common';
+
 export declare interface SqliteAdapterTable {
     create(fields:Array<any>, callback: (err: Error) => void): void;
     createAsync(fields:Array<any>): Promise<void>;
@@ -30,9 +32,11 @@ export declare interface SqliteAdapterMigration {
     version: string;
 }
 
-export declare class SqliteAdapter {
+export declare class SqliteAdapter implements DataAdapterBase {
+    rawConnection?: any;
+    options?: any;
+    selectIdentityAsync(entity: string, attribute: string): Promise<any>;
     static formatType(field: any): string;
-
     open(callback: (err: Error) => void): void;
     close(callback: (err: Error) => void): void;
     openAsync(): Promise<void>;
@@ -40,7 +44,7 @@ export declare class SqliteAdapter {
     prepare(query: any, values?: Array<any>): any;
     createView(name: string, query: any, callback: (err: Error) => void): void;
     executeInTransaction(func: any, callback: (err: Error) => void): void;
-    executeInTransactionAsync(func: Promise<any>): Promise<any>;
+    executeInTransactionAsync(func: () => Promise<any>): Promise<any>;
     migrate(obj: SqliteAdapterMigration, callback: (err: Error) => void): void;
     migrateAsync(obj: SqliteAdapterMigration): Promise<void>;
     selectIdentity(entity: string, attribute: string, callback: (err: Error, value: any) => void): void;
@@ -48,6 +52,7 @@ export declare class SqliteAdapter {
     executeAsync(query: any, values: any): Promise<any>;
     executeAsync<T>(query: any, values: any): Promise<Array<T>>;
     lastIdentity(callback: (err: Error, value: any) => void): void;
-    table(name: string): SqliteAdapterTable;
-    view(name: string): SqliteAdapterView;
+    table(table: string): DataAdapterTable;
+    view(view: string): DataAdapterView;
+    indexes(table: string): DataAdapterIndexes;
 }

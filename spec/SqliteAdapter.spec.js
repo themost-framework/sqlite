@@ -1,4 +1,5 @@
 import { QueryExpression } from '@themost/query';
+import { SqliteFormatter } from '../src/SqliteFormatter';
 import { TestApplication } from './TestApplication';
 
 describe('SqliteAdapter', () => {
@@ -63,7 +64,7 @@ describe('SqliteAdapter', () => {
             expect(column).toBeTruthy();
             expect(column.nullable).toBeTruthy();
             expect(column.size).toBe(255);
-            await db.executeAsync(`DROP TABLE ${new PostgreSQLFormatter().escapeName('Table1')}`);
+            await db.executeAsync(`DROP TABLE ${new SqliteFormatter().escapeName('Table1')}`);
         });
     });
 
@@ -114,7 +115,7 @@ describe('SqliteAdapter', () => {
             column = columns.find((col) => col.name === 'description');
             expect(column.size).toEqual(512);
             expect(column.nullable).toBeTruthy();
-            await db.executeAsync(`DROP TABLE ${new PostgreSQLFormatter().escapeName('Table2')}`);
+            await db.executeAsync(`DROP TABLE ${new SqliteFormatter().escapeName('Table2')}`);
         });
 
     });
@@ -165,7 +166,7 @@ describe('SqliteAdapter', () => {
         });
     });
 
-    it('should create index', async () => {
+    fit('should create index', async () => {
         await app.executeInTestTranscaction(async (context) => {
             const db = context.db;
             let exists = await db.table('Table1').existsAsync();
@@ -213,7 +214,7 @@ describe('SqliteAdapter', () => {
             exists = list.findIndex((index) => index.name === 'idx_name') >= 0;
             expect(exists).toBeFalsy();
 
-            await db.executeAsync(`DROP TABLE ${new PostgreSQLFormatter().escapeName('Table1')}`);
+            await db.executeAsync(`DROP TABLE ${new SqliteFormatter().escapeName('Table1')}`);
         });
     });
 });

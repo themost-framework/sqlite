@@ -3,6 +3,7 @@ node_modules
 
 # build
 rollup.config.js
+babel.config.js
 
 # gitpod
 gitpd.yml
