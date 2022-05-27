@@ -1,15 +1,17 @@
 {
   "name": "@themost/sqlite",
   "version": "2.6.4",
-  "description": "MOST Web Framework 2.0 - SQLite data adapter",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "description": "MOST Web Framework SQLite Adapter",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.esm.js",
   "scripts": {
-    "test": "jasmine"
+    "test": "jasmine",
+    "build": "rimraf dist && rollup --config rollup.config.js"
   },
   "peerDependencies": {
-    "@themost/common": ">=2.5.0 < 3",
-    "@themost/query": ">=2.5.0 < 3"
+    "@themost/common": "^2",
+    "@themost/query": "^2"
   },
   "repository": {
     "type": "git",
@@ -23,17 +25,29 @@
   "homepage": "https://github.com/themost-framework/sqlite#readme",
   "dependencies": {
     "async": "^2.6.4",
-    "package-lock-only": "^0.0.4",
+    "sprintf-js": "^1.1.2",
     "sqlite3": "^5.0.7"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=12"
   },
   "devDependencies": {
-    "@themost/common": "^2.5.6",
-    "@themost/query": ">=2.5.9 < 3",
-    "dotenv": "^8.2.0",
-    "jasmine": "^3.5.0",
-    "jasmine-spec-reporter": "^5.0.2"
+    "@babel/cli": "^7.17.6",
+    "@babel/core": "^7.17.5",
+    "@babel/eslint-plugin": "^7.17.7",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/register": "^7.17.0",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-commonjs": "^22.0.0",
+    "@themost/peers": "^1.0.2",
+    "dotenv": "^16.0.0",
+    "eslint": "^8.15.0",
+    "jasmine": "^4.1.0",
+    "jasmine-spec-reporter": "^7.0.0",
+    "nyc": "^15.1.0",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.73.0",
+    "rollup-plugin-dts": "^4.2.1",
+    "typescript": "^4.6.4"
   }
 }

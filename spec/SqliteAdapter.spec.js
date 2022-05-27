@@ -1,175 +1,219 @@
-const {SqliteAdapter, createInstance} = require('../index');
-const fs = require('fs');
-const path = require('path');
-const { QueryExpression }  = require('@themost/query')
-const ProductModel = require('./config/models/Product.json');
-const EmployeeModel = require('./config/models/Employee.json');
-const CategoryModel = require('./config/models/Category.json');
-// get options from environmet for testing
-const testConnectionOptions = {
-    'database': 'spec/test.db'
-};
+import { QueryExpression } from '@themost/query';
+import { TestApplication } from './TestApplication';
 
 describe('SqliteAdapter', () => {
-
-    beforeAll( async () => {
-        const db = path.resolve(process.cwd(), testConnectionOptions.database);
-        if (fs.existsSync(db) === true) {
-            fs.unlinkSync(db);
-        }
+    /**
+     * @type {TestApplication}
+     */
+    let app;
+    beforeAll(async () => {
+        app = new TestApplication(__dirname);
     });
-    afterAll( async () => {
+    beforeEach(async () => {
         //
     });
-
-    it('should create instance', async () => {
-        const adapter = new SqliteAdapter();
-        expect(adapter).toBeTruthy();
+    afterAll(async () => {
+        await app.finalize();
     });
-
-    it('should use createInstance()', async () => {
-        const adapter = createInstance();
-        expect(adapter).toBeTruthy();
-        expect(adapter).toBeInstanceOf(SqliteAdapter);
-    });
-
-    it('should use open()', async () => {
-        /**
-         * @type {MSSqlAdapter}
-         */
-        const adapter = createInstance(testConnectionOptions);
-        await adapter.openAsync();
-        expect(adapter.rawConnection).toBeTruthy();
-        await adapter.closeAsync();
-        expect(adapter.rawConnection).toBeFalsy();
-    });
-
-    it('should use close()', async () => {
-        /**
-         * @type {MSSqlAdapter}
-         */
-        const adapter = createInstance(testConnectionOptions);
-        await adapter.openAsync();
-        await adapter.closeAsync();
-        expect(adapter.rawConnection).toBeFalsy();
-    });
-
-    it('should use migrate()', async () => {
-        /**
-         * @type {MSSqlAdapter}
-         */
-        const adapter = createInstance(testConnectionOptions);
-        await adapter.migrateAsync({
-            add: CategoryModel.fields,
-            appliesTo: CategoryModel.source,
-            version: CategoryModel.version
-        });
-        let exists = await adapter.table(CategoryModel.source).existsAsync();
-        expect(exists).toBeTrue();
+    afterEach(async () => {
+        //
     });
     
-    it('should use table(string).exists()', async () => {
-        const adapter = new SqliteAdapter(testConnectionOptions);
-        let exists = await adapter.table(ProductModel.source).existsAsync();
-        if (exists === false) {
-            await adapter.table(ProductModel.source).createAsync(ProductModel.fields);
-        }
-        exists = await adapter.table(ProductModel.source).existsAsync();
-        expect(exists).toBeTrue();
-        // drop table by executing SQL
-        await adapter.executeAsync(`DROP TABLE "${ProductModel.source}";`);
-        exists = await adapter.table(ProductModel.source).existsAsync();
-        expect(exists).toBeFalse();
-        await adapter.closeAsync();
-    });
-
-    it('should use table(string).create()', async () => {
-        const adapter = new SqliteAdapter(testConnectionOptions);
-        let exists = await adapter.table(ProductModel.source).existsAsync();
-        if (exists === true) {
-            // drop table
-            await adapter.executeAsync(`DROP TABLE "${ProductModel.source}";`);
-        }
-        await adapter.table(ProductModel.source).createAsync(ProductModel.fields);
-        exists = await adapter.table(ProductModel.source).existsAsync();
-        expect(exists).toBeTrue();
-        // drop table
-        await adapter.executeAsync(`DROP TABLE "${ProductModel.source}";`);
-        await adapter.closeAsync();
-    });
-
-    it('should use execute() for insert', async () => {
-        const adapter = new SqliteAdapter(testConnectionOptions);
-        let exists = await adapter.table(EmployeeModel.source).existsAsync();
-        if (exists === false) {
-            await adapter.table(EmployeeModel.source).createAsync(EmployeeModel.fields);
-        }
-        const sources = EmployeeModel.seed.map( item => {
-            return new QueryExpression().insert(item).into(EmployeeModel.source);
-        }).map( query => {
-            return adapter.executeAsync(query);
+    it('should check table', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const exists = await context.db.table('Table1').existsAsync();
+            expect(exists).toBeFalsy();
         });
-        await Promise.all(sources);
-        const query = new QueryExpression().from(EmployeeModel.source)
-            .where('LastName').equal('Davolio')
-            .select('EmployeeID', 'LastName', 'FirstName');
-        let res = await adapter.executeAsync(query);
-        expect(res).toBeInstanceOf(Array);
-        expect(res.length).toBe(1);
-        expect(res[0].LastName).toBe('Davolio')
-        // drop table
-        await adapter.executeAsync(`DROP TABLE "${EmployeeModel.source}";`);
-        await adapter.closeAsync();
     });
 
-    it('should use execute() for update', async () => {
-        const adapter = new SqliteAdapter(testConnectionOptions);
-        let exists = await adapter.table(EmployeeModel.source).existsAsync();
-        if (exists === false) {
-            await adapter.table(EmployeeModel.source).createAsync(EmployeeModel.fields);
-        }
-        const sources = EmployeeModel.seed.map( item => {
-            return new QueryExpression().insert(item).into(EmployeeModel.source);
-        }).map( query => {
-            return adapter.executeAsync(query);
+    it('should create table', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const db = context.db;
+            let exists = await db.table('Table1').existsAsync();
+            expect(exists).toBeFalsy();
+            await context.db.table('Table1').createAsync([
+                {
+                    name: 'id',
+                    type: 'Counter',
+                    primary: true,
+                    nullable: false
+                },
+                {
+                    name: 'name',
+                    type: 'Text',
+                    size: 255,
+                    nullable: false
+                },
+                {
+                    name: 'description',
+                    type: 'Text',
+                    size: 255,
+                    nullable: true
+                }
+            ]);
+            exists = await db.table('Table1').existsAsync();
+            expect(exists).toBeTruthy();
+            // get columns
+            const columns = await db.table('Table1').columnsAsync();
+            expect(columns).toBeInstanceOf(Array);
+            let column = columns.find((col) => col.name === 'id');
+            expect(column).toBeTruthy();
+            expect(column.nullable).toBeFalsy();
+            column = columns.find((col) => col.name === 'description');
+            expect(column).toBeTruthy();
+            expect(column.nullable).toBeTruthy();
+            expect(column.size).toBe(255);
+            await db.executeAsync(`DROP TABLE ${new PostgreSQLFormatter().escapeName('Table1')}`);
         });
-        await Promise.all(sources);
-        const updateQuery = new QueryExpression().update(EmployeeModel.source)
-            .set({
-                LastName: 'Davolio-Arnold'
-            })
-            .where('LastName').equal('Davolio');
-        await adapter.executeAsync(updateQuery);
-        const query = new QueryExpression().from(EmployeeModel.source)
-        .where('LastName').equal('Davolio-Arnold')
-        .select('EmployeeID', 'LastName', 'FirstName');
-        let res = await adapter.executeAsync(query);
-        expect(res).toBeInstanceOf(Array);
-        expect(res.length).toBe(1);
-        expect(res[0].LastName).toBe('Davolio-Arnold');
-        // drop table
-        await adapter.executeAsync(`DROP TABLE "${EmployeeModel.source}";`);
-        await adapter.closeAsync();
+    });
+
+    it('should alter table', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const db = context.db;
+            let exists = await db.table('Table2').existsAsync();
+            expect(exists).toBeFalsy();
+            await db.table('Table2').createAsync([
+                {
+                    name: 'id',
+                    type: 'Counter',
+                    primary: true,
+                    nullable: false
+                },
+                {
+                    name: 'name',
+                    type: 'Text',
+                    size: 255,
+                    nullable: false
+                }
+            ]);
+            exists = await db.table('Table2').existsAsync();
+            expect(exists).toBeTruthy();
+            await db.table('Table2').addAsync([
+                {
+                    name: 'description',
+                    type: 'Text',
+                    size: 255,
+                    nullable: true
+                }
+            ]);
+            // get columns
+            let columns = await db.table('Table2').columnsAsync();
+            expect(columns).toBeInstanceOf(Array);
+            let column = columns.find((col) => col.name === 'description');
+            expect(column).toBeTruthy();
+
+            await db.table('Table2').changeAsync([
+                {
+                    name: 'description',
+                    type: 'Text',
+                    size: 512,
+                    nullable: true
+                }
+            ]);
+            columns = await db.table('Table2').columnsAsync();
+            column = columns.find((col) => col.name === 'description');
+            expect(column.size).toEqual(512);
+            expect(column.nullable).toBeTruthy();
+            await db.executeAsync(`DROP TABLE ${new PostgreSQLFormatter().escapeName('Table2')}`);
+        });
+
     });
 
 
-    it('should use view(string).exists()', async () => {
-        const adapter = new SqliteAdapter(testConnectionOptions);
-        let exists = await adapter.view('EmployeesView').existsAsync();
-        expect(exists).toBeFalse();
+    it('should create view', async () => {
 
-        await adapter.table(EmployeeModel.source).createAsync(EmployeeModel.fields);
-        
-        await adapter.view('EmployeesView').createAsync(new QueryExpression().from('Employees')
-        .select('EmployeeID', 'LastName', 'FirstName', 'BirthDate', 'Photo', 'Notes'));
+        await app.executeInTestTranscaction(async (context) => {
+            const db = context.db;
+            let exists = await db.table('Table1').existsAsync();
+            expect(exists).toBeFalsy();
+            await db.table('Table1').createAsync([
+                {
+                    name: 'id',
+                    type: 'Counter',
+                    primary: true,
+                    nullable: false
+                },
+                {
+                    name: 'name',
+                    type: 'Text',
+                    size: 255,
+                    nullable: false
+                },
+                {
+                    name: 'description',
+                    type: 'Text',
+                    size: 255,
+                    nullable: true
+                }
+            ]);
+            exists = await db.table('Table1').existsAsync();
+            expect(exists).toBeTruthy();
 
-        exists = await adapter.view('EmployeesView').existsAsync();
-        expect(exists).toBeTrue();
-        // drop view
-        await adapter.view('EmployeesView').dropAsync();
-        // drop table
-        await adapter.executeAsync(`DROP TABLE "${EmployeeModel.source}";`);
-        await adapter.closeAsync();
+            exists = await db.view('View1').existsAsync();
+            expect(exists).toBeFalsy();
+
+            const query = new QueryExpression().select('id', 'name', 'description').from('Table1');
+            await db.view('View1').createAsync(query);
+
+            exists = await db.view('View1').existsAsync();
+            expect(exists).toBeTruthy();
+
+            await db.view('View1').dropAsync();
+
+            exists = await db.view('View1').existsAsync();
+            expect(exists).toBeFalsy();
+        });
     });
 
+    it('should create index', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const db = context.db;
+            let exists = await db.table('Table1').existsAsync();
+            expect(exists).toBeFalsy();
+            await db.table('Table1').createAsync([
+                {
+                    name: 'id',
+                    type: 'Counter',
+                    primary: true,
+                    nullable: false
+                },
+                {
+                    name: 'name',
+                    type: 'Text',
+                    size: 255,
+                    nullable: false
+                },
+                {
+                    name: 'description',
+                    type: 'Text',
+                    size: 255,
+                    nullable: true
+                }
+            ]);
+            exists = await db.table('Table1').existsAsync();
+            expect(exists).toBeTruthy();
+
+            let list = await db.indexes('Table1').listAsync();
+            expect(list).toBeInstanceOf(Array);
+            exists = list.findIndex((index) => index.name === 'idx_name') < 0;
+
+            await db.indexes('Table1').createAsync('idx_name', [
+                'name'
+            ]);
+
+            list = await db.indexes('Table1').listAsync();
+            expect(list).toBeInstanceOf(Array);
+            exists = list.findIndex((index) => index.name === 'idx_name') >= 0;
+            expect(exists).toBeTruthy();
+
+            await db.indexes('Table1').dropAsync('idx_name');
+
+            list = await db.indexes('Table1').listAsync();
+            expect(list).toBeInstanceOf(Array);
+            exists = list.findIndex((index) => index.name === 'idx_name') >= 0;
+            expect(exists).toBeFalsy();
+
+            await db.executeAsync(`DROP TABLE ${new PostgreSQLFormatter().escapeName('Table1')}`);
+        });
+    });
 });

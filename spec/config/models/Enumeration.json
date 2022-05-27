@@ -11,6 +11,15 @@
     "version": "2.0",
     "fields": [
         {
+            "@id": "https://themost.io/schemas/id",
+            "name": "id",
+            "title": "ID",
+            "description": "The identifier of the item.",
+            "type": "Counter",
+            "primary": true,
+            "nullable": false
+        },
+        {
             "@id": "http://schema.org/name",
             "name": "name",
             "title": "name",

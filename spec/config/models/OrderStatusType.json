@@ -64,13 +64,11 @@
             "description": "Representing that an order is being processed."
         },
         {
-            "id": 7,
             "name": "Problem",
             "alternateName": "OrderProblem",
             "description": "Representing that there is a problem with the order."
         },
         {
-            "id": 8,
             "name": "Returned",
             "alternateName": "OrderReturned",
             "description": "Representing that an order has been returned."

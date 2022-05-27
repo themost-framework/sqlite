@@ -1163,6 +1163,6 @@ class SqliteAdapter {
     }
 }
 
-module.exports = {
+export {
     SqliteAdapter
 };
