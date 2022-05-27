@@ -68,59 +68,6 @@ describe('SqliteAdapter', () => {
         });
     });
 
-    it('should alter table', async () => {
-        await app.executeInTestTranscaction(async (context) => {
-            const db = context.db;
-            let exists = await db.table('Table2').existsAsync();
-            expect(exists).toBeFalsy();
-            await db.table('Table2').createAsync([
-                {
-                    name: 'id',
-                    type: 'Counter',
-                    primary: true,
-                    nullable: false
-                },
-                {
-                    name: 'name',
-                    type: 'Text',
-                    size: 255,
-                    nullable: false
-                }
-            ]);
-            exists = await db.table('Table2').existsAsync();
-            expect(exists).toBeTruthy();
-            await db.table('Table2').addAsync([
-                {
-                    name: 'description',
-                    type: 'Text',
-                    size: 255,
-                    nullable: true
-                }
-            ]);
-            // get columns
-            let columns = await db.table('Table2').columnsAsync();
-            expect(columns).toBeInstanceOf(Array);
-            let column = columns.find((col) => col.name === 'description');
-            expect(column).toBeTruthy();
-
-            await db.table('Table2').changeAsync([
-                {
-                    name: 'description',
-                    type: 'Text',
-                    size: 512,
-                    nullable: true
-                }
-            ]);
-            columns = await db.table('Table2').columnsAsync();
-            column = columns.find((col) => col.name === 'description');
-            expect(column.size).toEqual(512);
-            expect(column.nullable).toBeTruthy();
-            await db.executeAsync(`DROP TABLE ${new SqliteFormatter().escapeName('Table2')}`);
-        });
-
-    });
-
-
     it('should create view', async () => {
 
         await app.executeInTestTranscaction(async (context) => {
@@ -166,7 +113,7 @@ describe('SqliteAdapter', () => {
         });
     });
 
-    fit('should create index', async () => {
+    it('should create index', async () => {
         await app.executeInTestTranscaction(async (context) => {
             const db = context.db;
             let exists = await db.table('Table1').existsAsync();

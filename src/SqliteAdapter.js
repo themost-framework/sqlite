@@ -470,8 +470,7 @@ class SqliteAdapter {
                             }
                         }
                         if (forceAlter) {
-                            cb(new Error('Full table migration is not yet implemented.'));
-                            return;
+                            return cb(new Error('Full table migration is not yet implemented.'));
                         }
                         else {
                             const formatter = new SqliteFormatter();
@@ -830,6 +829,24 @@ class SqliteAdapter {
             addAsync: function (fields) {
                 return new Promise((resolve, reject) => {
                     this.add(fields, (err, res) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        return resolve(res);
+                    });
+                });
+            },
+            /**
+             * Alters the table by modifying an array of fields
+             * @param {Array<*>} fields
+             * @param callback
+             */
+            change: function (fields, callback) {
+                return callback(new Error('Full table migration is not yet implemented.'));
+            },
+            changeAsync: function (fields) {
+                return new Promise((resolve, reject) => {
+                    this.change(fields, (err, res) => {
                         if (err) {
                             return reject(err);
                         }
@@ -1197,7 +1214,8 @@ class SqliteAdapter {
                     if (!exists) {
                         return callback();
                     }
-                    self.execute(sprintf('DROP INDEX %s', self.escapeName(name)), [], callback);
+                    const formatter = new SqliteFormatter();
+                    self.execute(sprintf('DROP INDEX %s', formatter.escapeName(name)), [], callback);
                 });
             },
             dropAsync: function(name) {
