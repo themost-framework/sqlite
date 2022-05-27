@@ -6,7 +6,8 @@ rollup.config.js
 babel.config.js
 
 # gitpod
-gitpd.yml
+.gitpod.yml
+.gitpod.dockerfile
 
 #github
 .github
