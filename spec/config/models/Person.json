@@ -48,8 +48,16 @@
             "@id": "http://schema.org/gender",
             "name": "gender",
             "title": "Gender",
-            "description": "Gender of the person. While http://schema.org/Male and http://schema.org/Female may be used, text strings are also acceptable for people who do not identify as a binary gender.",
-            "type": "GenderType"
+            "description": "Gender of the person.",
+            "type": "GenderType",
+            "mapping": {
+                "associationType": "association",
+                "parentModel": "GenderType",
+                "parentField": "alternateName",
+                "childModel": "Person",
+                "childField": "gender"
+            },
+            "size": 2
         },
         {
             "@id": "http://schema.org/memberOf",

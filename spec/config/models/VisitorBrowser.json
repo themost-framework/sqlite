@@ -34,26 +34,32 @@
     "seed": [
         {
             "name": "Chrome",
+            "alternateName": "chrome",
             "color": "#f56954"
         },
         {
             "name": "IE",
+            "alternateName": "ie",
             "color": "#00a65a"
         },
         {
             "name": "FireFox",
+            "alternateName": "firefox",
             "color": "#f39c12"
         },
         {
             "name": "Safari",
+            "alternateName": "safari",
             "color": "#00c0ef"
         },
         {
             "name": "Opera",
+            "alternateName": "opera",
             "color": "#3c8dbc"
         },
         {
             "name": "Navigator",
+            "alternateName": "navigator",
             "color": "#d2d6de"
         }
     ]

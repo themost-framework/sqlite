@@ -1,6 +1,6 @@
-// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2021, THEMOST LP
-const { SqliteAdapter } = require('./SqliteAdapter');
-const { SqliteFormatter } = require('./SqliteFormatter');
+// MOST Web Framework Codename Zero Gravity Copyright (c) 2017-2022, THEMOST LP
+import { SqliteAdapter } from './SqliteAdapter';
+import { SqliteFormatter } from './SqliteFormatter';
 
 /**
  * Creates an instance of SqliteAdapter object that represents a SQLite database connection.
@@ -11,7 +11,7 @@ function createInstance(options) {
     return new SqliteAdapter(options);
 }
 
-module.exports = {
+export {
     SqliteAdapter,
     SqliteFormatter,
     createInstance

@@ -1,11 +1,11 @@
-// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2021, THEMOST LP
+// MOST Web Framework Codename Zero Gravity Copyright (c) 2017-2022, THEMOST LP
 
-const {waterfall, eachSeries} = require('async');
-const util = require('util');
-const {TraceUtils} = require('@themost/common');
-const { QueryExpression, QueryField, SqlUtils } = require('@themost/query');
-const { SqliteFormatter } = require('./SqliteFormatter');
-const sqlite = require('sqlite3');
+import { sprintf } from 'sprintf-js';
+import {waterfall, eachSeries} from 'async';
+import {TraceUtils}  from '@themost/common';
+import { QueryExpression, QueryField, SqlUtils } from '@themost/query';
+import { SqliteFormatter } from './SqliteFormatter';
+import sqlite from 'sqlite3';
 const sqlite3 = sqlite.verbose();
 const SqlDateRegEx = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d+\+[0-1][0-9]:[0-5][0-9]$/;
 /**
@@ -101,7 +101,7 @@ class SqliteAdapter {
     prepare(query, values) {
         return SqlUtils.format(query, values);
     }
-    static formatType(field) {
+    formatType(field) {
         const size = parseInt(field.size);
         let s;
         switch (field.type) {
@@ -131,13 +131,13 @@ class SqliteAdapter {
                 s = 'NUMERIC';
                 break;
             case 'Time':
-                s = size > 0 ? util.format('TEXT(%s,0)', size) : 'TEXT';
+                s = size > 0 ? sprintf('TEXT(%s,0)', size) : 'TEXT';
                 break;
             case 'Long':
                 s = 'NUMERIC';
                 break;
             case 'Duration':
-                s = size > 0 ? util.format('TEXT(%s,0)', size) : 'TEXT(48,0)';
+                s = size > 0 ? sprintf('TEXT(%s,0)', size) : 'TEXT(48,0)';
                 break;
             case 'Integer':
                 s = 'INTEGER' + (field.size ? '(' + field.size + ',0)' : '');
@@ -145,7 +145,7 @@ class SqliteAdapter {
             case 'URL':
             case 'Text':
             case 'Note':
-                s = field.size ? util.format('TEXT(%s,0)', field.size) : 'TEXT';
+                s = field.size ? sprintf('TEXT(%s,0)', field.size) : 'TEXT';
                 break;
             case 'Image':
             case 'Binary':
@@ -168,10 +168,10 @@ class SqliteAdapter {
             return s.concat((field.nullable === undefined) ? ' NULL' : (field.nullable ? ' NULL' : ' NOT NULL'));
         }
     }
-    static format(format, obj) {
+    format(format, obj) {
         let result = format;
         if (/%t/.test(format))
-            result = result.replace(/%t/g, SqliteAdapter.formatType(obj));
+            result = result.replace(/%t/g, this.formatType(obj));
         if (/%f/.test(format))
             result = result.replace(/%f/g, obj.name);
         return result;
@@ -259,7 +259,7 @@ class SqliteAdapter {
         this.view(name).create(query, callback);
     }
     /*
-     * @param {DataModelMigration|*} obj An Object that represents the data model scheme we want to migrate
+     * @param {DataAdapterMigration} obj An Object that represents the data model scheme we want to migrate
      * @param {function(Error=)} callback
      */
     migrate(obj, callback) {
@@ -275,7 +275,7 @@ class SqliteAdapter {
         const format = function (format, obj) {
             let result = format;
             if (/%t/.test(format))
-                result = result.replace(/%t/g, SqliteAdapter.formatType(obj));
+                result = result.replace(/%t/g, self.formatType(obj));
             if (/%f/.test(format))
                 result = result.replace(/%f/g, obj.name);
             return result;
@@ -367,7 +367,7 @@ class SqliteAdapter {
                     }).map(function (x) {
                         return format('"%f" %t', x);
                     }).join(', ');
-                    const sql = util.format('CREATE TABLE "%s" (%s)', migration.appliesTo, strFields);
+                    const sql = sprintf('CREATE TABLE "%s" (%s)', migration.appliesTo, strFields);
                     self.execute(sql, null, function (err) {
                         if (err) {
                             cb(err);
@@ -470,13 +470,13 @@ class SqliteAdapter {
                             }
                         }
                         if (forceAlter) {
-                            cb(new Error('Full table migration is not yet implemented.'));
-                            return;
+                            return cb(new Error('Full table migration is not yet implemented.'));
                         }
                         else {
+                            const formatter = new SqliteFormatter();
                             migration.add.forEach(function (x) {
                                 //search for columns
-                                expressions.push(util.format('ALTER TABLE "%s" ADD COLUMN "%s" %s', migration.appliesTo, x.name, SqliteAdapter.formatType(x)));
+                                expressions.push(sprintf('ALTER TABLE %s ADD COLUMN %s %s', formatter.escapeName(migration.appliesTo), formatter.escapeName(x.name), self.formatType(x)));
                             });
                         }
                     }
@@ -633,6 +633,17 @@ class SqliteAdapter {
             });
         });
     }
+    
+    selectIdentityAsync(entity, attribute) {
+        return new Promise((resolve, reject) => {
+            return this.selectIdentity(entity, attribute, (err, value) => {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve(value);
+            });
+        });
+    }
     /**
      * Executes an operation against database and returns the results.
      * @param {*} batch
@@ -730,7 +741,7 @@ class SqliteAdapter {
                      * @param {{name:string},{cid:number},{type:string},{notnull:number},{pk:number}} x
                      */
                     const iterator = function (x) {
-                        const col = { name: x.name, ordinal: x.cid, type: x.type, nullable: (x.notnull ? true : false), primary: (x.pk === 1) };
+                        const col = { name: x.name, ordinal: x.cid, type: x.type, nullable: (x.notnull ? false : true), primary: (x.pk === 1) };
                         const matches = /(\w+)\((\d+),(\d+)\)/.exec(x.type);
                         if (matches) {
                             //extract max length attribute (e.g. integer(2,0) etc)
@@ -768,9 +779,9 @@ class SqliteAdapter {
                 const strFields = fields.filter(function (x) {
                     return !x.oneToMany;
                 }).map(function (x) {
-                    return SqliteAdapter.format('"%f" %t', x);
+                    return self.format('"%f" %t', x);
                 }).join(', ');
-                const sql = util.format('CREATE TABLE "%s" (%s)', name, strFields);
+                const sql = sprintf('CREATE TABLE "%s" (%s)', name, strFields);
                 self.execute(sql, null, function (err) {
                     if (err) {
                         return callback(err);
@@ -781,6 +792,61 @@ class SqliteAdapter {
             createAsync: function(fields) {
                 return new Promise((resolve, reject) => {
                     this.create(fields, (err, res) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        return resolve(res);
+                    });
+                });
+            },
+            /**
+             * Alters the table by adding an array of fields
+             * @param {Array<*>} fields
+             * @param callback
+             */
+             add: function (fields, callback) {
+                callback = callback || function () { };
+                fields = fields || [];
+                if (Array.isArray(fields) === false) {
+                    //invalid argument exception
+                    return callback(new Error('Invalid argument type. Expected Array.'));
+                }
+                if (fields.length === 0) {
+                    // do nothing
+                    return callback();
+                }
+                // generate SQL statement
+                const formatter = new SqliteFormatter();
+                const escapedTable = new SqliteFormatter().escapeName(name);
+                const sql = fields.map((field) => {
+                    const escapedField = formatter.escapeName(field.name);
+                    return sprintf('ALTER TABLE %s ADD COLUMN %s %s', escapedTable, escapedField, self.formatType(field));
+                }).join(';');
+                self.execute(sql, [], function (err) {
+                    callback(err);
+                });
+            },
+            addAsync: function (fields) {
+                return new Promise((resolve, reject) => {
+                    this.add(fields, (err, res) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        return resolve(res);
+                    });
+                });
+            },
+            /**
+             * Alters the table by modifying an array of fields
+             * @param {Array<*>} fields
+             * @param callback
+             */
+            change: function (fields, callback) {
+                return callback(new Error('Full table migration is not yet implemented.'));
+            },
+            changeAsync: function (fields) {
+                return new Promise((resolve, reject) => {
+                    this.change(fields, (err, res) => {
                         if (err) {
                             return reject(err);
                         }
@@ -825,7 +891,7 @@ class SqliteAdapter {
                         callback(err);
                         return;
                     }
-                    const sql = util.format('DROP VIEW IF EXISTS `%s`', name);
+                    const sql = sprintf('DROP VIEW IF EXISTS `%s`', name);
                     self.execute(sql, undefined, function (err) {
                         if (err) {
                             callback(err);
@@ -858,7 +924,7 @@ class SqliteAdapter {
                             return;
                         }
                         try {
-                            let sql = util.format('CREATE VIEW `%s` AS ', name);
+                            let sql = sprintf('CREATE VIEW `%s` AS ', name);
                             const formatter = new SqliteFormatter();
                             sql += formatter.format(q);
                             self.execute(sql, undefined, tr);
@@ -915,7 +981,7 @@ class SqliteAdapter {
                 else {
                     //log statement (optional)
                     if (process.env.NODE_ENV === 'development')
-                        TraceUtils.log(util.format('SQL:%s, Parameters:%s', sql, JSON.stringify(values)));
+                        TraceUtils.log(sprintf('SQL:%s, Parameters:%s', sql, JSON.stringify(values)));
                     //prepare statement - the traditional way
                     const prepared = self.prepare(sql, values);
                     let fn;
@@ -932,7 +998,7 @@ class SqliteAdapter {
                     fn.call(self.rawConnection, prepared, [], function (err, result) {
                         if (err) {
                             //log sql
-                            TraceUtils.log(util.format('SQL Error:%s', prepared));
+                            TraceUtils.log(sprintf('SQL Error:%s', prepared));
                             callback(err);
                         }
                         else {
@@ -1025,10 +1091,10 @@ class SqliteAdapter {
         return {
             list: function (callback) {
                 const this1 = this;
-                if (this1.hasOwnProperty('indexes_')) {
+                if (Object.prototype.hasOwnProperty.call(this1, 'indexes_')) {
                     return callback(null, this1['indexes_']);
                 }
-                self.execute(util.format('PRAGMA INDEX_LIST(`%s`)', table), null, function (err, result) {
+                self.execute(sprintf('PRAGMA INDEX_LIST(`%s`)', table), null, function (err, result) {
                     if (err) {
                         return callback(err);
                     }
@@ -1041,7 +1107,7 @@ class SqliteAdapter {
                         };
                     });
                     eachSeries(indexes, function (index, cb) {
-                        self.execute(util.format('PRAGMA INDEX_INFO(`%s`)', index.name), null, function (err, columns) {
+                        self.execute(sprintf('PRAGMA INDEX_INFO(`%s`)', index.name), null, function (err, columns) {
                             if (err) {
                                 return cb(err);
                             }
@@ -1061,11 +1127,11 @@ class SqliteAdapter {
             },
             listAsync: function() {
                 return new Promise((resolve, reject) => {
-                    this.list((err) => {
+                    this.list((err, results) => {
                         if (err) {
                             return reject(err);
                         }
-                        return resolve();
+                        return resolve(results);
                     });
                 });
             },
@@ -1092,11 +1158,13 @@ class SqliteAdapter {
                     }
                     const ix = indexes.find(function (x) { return x.name === name; });
                     //format create index SQL statement
-                    const sqlCreateIndex = util.format('CREATE INDEX %s ON %s(%s)', formatter.escapeName(name), formatter.escapeName(table), cols.map(function (x) {
+                    const sqlCreateIndex = sprintf('CREATE INDEX %s ON %s(%s)', formatter.escapeName(name), formatter.escapeName(table), cols.map(function (x) {
                         return formatter.escapeName(x);
                     }).join(','));
                     if (typeof ix === 'undefined' || ix === null) {
-                        self.execute(sqlCreateIndex, [], callback);
+                        return self.execute(sqlCreateIndex, [], (err, result) => {
+                            return callback(err, result)
+                        });
                     }
                     else {
                         let nCols = cols.length;
@@ -1124,9 +1192,9 @@ class SqliteAdapter {
                     }
                 });
             },
-            createAsync: function(q) {
+            createAsync: function(name, columns) {
                 return new Promise((resolve, reject) => {
-                    this.create(q, (err) => {
+                    this.create(name, columns, (err) => {
                         if (err) {
                             return reject(err);
                         }
@@ -1138,7 +1206,7 @@ class SqliteAdapter {
                 if (typeof name !== 'string') {
                     return callback(new Error('Name must be a valid string.'));
                 }
-                self.execute(util.format('PRAGMA INDEX_LIST(`%s`)', table), null, function (err, result) {
+                self.execute(sprintf('PRAGMA INDEX_LIST(`%s`)', table), null, function (err, result) {
                     if (err) {
                         return callback(err);
                     }
@@ -1146,7 +1214,8 @@ class SqliteAdapter {
                     if (!exists) {
                         return callback();
                     }
-                    self.execute(util.format('DROP INDEX %s', self.escapeName(name)), [], callback);
+                    const formatter = new SqliteFormatter();
+                    self.execute(sprintf('DROP INDEX %s', formatter.escapeName(name)), [], callback);
                 });
             },
             dropAsync: function(name) {
@@ -1163,6 +1232,6 @@ class SqliteAdapter {
     }
 }
 
-module.exports = {
+export {
     SqliteAdapter
 };

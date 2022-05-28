@@ -1,6 +1,18 @@
 # node.js
 node_modules
 
+# build
+rollup.config.js
+babel.config.js
+
+# gitpod
+.gitpod.yml
+.gitpod.dockerfile
+
+#github
+.github
+
+
 # editors
 .idea
 .theia

@@ -8,8 +8,12 @@
 [![npm](https://img.shields.io/npm/dw/@themost/sqlite)](https://www.npmjs.com/package/@themost%2Fsqlite)
 ![Snyk Vulnerabilities for npm package](https://img.shields.io/snyk/vulnerabilities/npm/@themost/sqlite)
 
+![MOST Web Framework Logo](https://github.com/themost-framework/common/raw/master/docs/img/themost_framework_v3_128.png)
+
 # @themost/sqlite
 MOST Web Framework SQLite Data Adapter
+
+License: [BSD-3-Clause](https://github.com/themost-framework/sqlite/blob/master/LICENSE)
 
 ## Install
 
@@ -36,7 +40,6 @@ Register SQLite adapter on app.json as follows:
     ]
 }
 
-If you are intended to use SQLite adapter as the default database adapter set the property "default" to true. 
 
 #### Post Installation Note:
 SQLite Data Adapter comes with a regular expression extension for SQLite (regexp.c). You have to compile this extension as follows:

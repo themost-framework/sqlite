@@ -108,6 +108,6 @@ dist
 .idea
 .theia
 .DS_Store
-# Testing
-spec/helpers/env.js
-spec/test.db
+
+# db
+*.db-journal

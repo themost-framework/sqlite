@@ -79,7 +79,8 @@
             "title": "ID",
             "description": "The identifier of the item.",
             "type": "Counter",
-            "primary": true
+            "primary": true,
+            "nullable": false
         },
         {
             "@id": "https://themost.io/schemas/dateCreated",
