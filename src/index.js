@@ -1,4 +1,4 @@
-// MOST Web Framework Copyright (c) 2017-2022, THEMOST LP
+// MOST Web Framework Codename Zero Gravity Copyright (c) 2017-2022, THEMOST LP
 import { SqliteAdapter } from './SqliteAdapter';
 import { SqliteFormatter } from './SqliteFormatter';
 

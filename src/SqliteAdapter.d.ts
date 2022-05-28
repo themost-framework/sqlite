@@ -1,36 +1,6 @@
-// MOST Web Framework 2.0 Codename Blueshift Copyright (c) 2017-2021, THEMOST LP
 
-import { DataAdapterBase, DataAdapterIndexes, DataAdapterTable, DataAdapterView } from '@themost/common';
-
-export declare interface SqliteAdapterTable {
-    create(fields:Array<any>, callback: (err: Error) => void): void;
-    createAsync(fields:Array<any>): Promise<void>;
-    exists(callback: (err: Error, result: boolean) => void): void;
-    existsAsync(): Promise<boolean>;
-    version(callback: (err: Error, result: string) => void): void;
-    versionAsync(): Promise<string>;
-    columns(callback: (err: Error, result: Array<any>) => void): void;
-    columnsAsync(): Promise<Array<any>>;
-    has_sequence(callback: (err: Error, result: boolean) => void): void;
-    has_sequenceAsync(): Promise<boolean>;
-    
-}
-
-export declare interface SqliteAdapterView {
-    create(query: any, callback: (err: Error) => void): void;
-    createAsync(query: any): Promise<void>;
-    exists(callback: (err: Error, result: boolean) => void): void;
-    existsAsync(): Promise<boolean>;
-    drop(callback: (err: Error) => void): void;
-    dropAsync(): Promise<void>;
-}
-
-export declare interface SqliteAdapterMigration {
-    add: Array<any>;
-    change?: Array<any>;
-    appliesTo: string;
-    version: string;
-}
+// MOST Web Framework Codename Zero Gravity Copyright (c) 2017-2022, THEMOST LP
+import { DataAdapterBase, DataAdapterIndexes, DataAdapterMigration, DataAdapterTable, DataAdapterView } from '@themost/common';
 
 export declare class SqliteAdapter implements DataAdapterBase {
     rawConnection?: any;
@@ -45,8 +15,8 @@ export declare class SqliteAdapter implements DataAdapterBase {
     createView(name: string, query: any, callback: (err: Error) => void): void;
     executeInTransaction(func: any, callback: (err: Error) => void): void;
     executeInTransactionAsync(func: () => Promise<any>): Promise<any>;
-    migrate(obj: SqliteAdapterMigration, callback: (err: Error) => void): void;
-    migrateAsync(obj: SqliteAdapterMigration): Promise<void>;
+    migrate(obj: DataAdapterMigration, callback: (err: Error) => void): void;
+    migrateAsync(obj: DataAdapterMigration): Promise<void>;
     selectIdentity(entity: string, attribute: string, callback: (err: Error, value: any) => void): void;
     execute(query: any, values: any, callback: (err: Error, value: any) => void): void;
     executeAsync(query: any, values: any): Promise<any>;

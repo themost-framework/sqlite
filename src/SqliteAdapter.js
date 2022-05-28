@@ -259,7 +259,7 @@ class SqliteAdapter {
         this.view(name).create(query, callback);
     }
     /*
-     * @param {DataModelMigration|*} obj An Object that represents the data model scheme we want to migrate
+     * @param {DataAdapterMigration} obj An Object that represents the data model scheme we want to migrate
      * @param {function(Error=)} callback
      */
     migrate(obj, callback) {
