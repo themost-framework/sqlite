@@ -22,6 +22,7 @@ export declare class SqliteAdapter implements DataAdapterBase {
     executeAsync(query: any, values: any): Promise<any>;
     executeAsync<T>(query: any, values: any): Promise<Array<T>>;
     lastIdentity(callback: (err: Error, value: any) => void): void;
+    lastIdentityAsync(): Promise<any>;
     table(table: string): DataAdapterTable;
     view(view: string): DataAdapterView;
     indexes(table: string): DataAdapterIndexes;
