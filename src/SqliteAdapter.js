@@ -1086,6 +1086,18 @@ class SqliteAdapter {
             }
         });
     }
+
+    lastIdentityAsync() {
+        return new Promise((resolve, reject) => {
+            return this.lastIdentity((err, value) => {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve(value);
+            });
+        });
+    }
+
     indexes(table) {
         const self = this, formatter = new SqliteFormatter();
         return {
