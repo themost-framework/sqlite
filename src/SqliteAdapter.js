@@ -8,6 +8,7 @@ import { SqliteFormatter } from './SqliteFormatter';
 import sqlite from 'sqlite3';
 const sqlite3 = sqlite.verbose();
 const SqlDateRegEx = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d+\+[0-1][0-9]:[0-5][0-9]$/;
+
 /**
  * @class
  * @augments DataAdapter
@@ -457,7 +458,18 @@ class SqliteAdapter {
                                 }
                                 else {
                                     newType = format('%t', x);
-                                    oldType = column.type.toUpperCase().concat(column.nullable ? ' NOT NULL' : ' NULL');
+                                    oldType = column.type.toUpperCase().concat(column.nullable ? ' NULL' : ' NOT NULL');
+                                    // trim zero scale for both new and old type
+                                    // e.g. TEXT(50,0) to TEXT(50)
+                                    const reTrimScale = /^(NUMERIC|TEXT|INTEGER)\((\d+)(,0)\)/g;
+                                    if (reTrimScale.test(newType) === true) {
+                                        // trim
+                                        newType = newType.replace(reTrimScale, '$1($2)');
+                                    }
+                                    if (reTrimScale.test(oldType) === true) {
+                                        // trim
+                                        oldType = oldType.replace(reTrimScale, '$1($2)');
+                                    }
                                     if (newType === oldType) {
                                         //remove column from add collection
                                         migration.add.splice(i, 1);
