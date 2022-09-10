@@ -1,6 +1,6 @@
 {
   "name": "@themost/sqlite",
-  "version": "2.6.5",
+  "version": "2.6.7",
   "description": "MOST Web Framework SQLite Adapter",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
