@@ -205,21 +205,21 @@ class SqliteAdapter {
                             return;
                         }
                         //initialize dummy transaction object (for future use)
-                        self.transaction = {};
+                        self.transaction = true;
                         //execute function
                         fn.call(self, function (err) {
                             if (err) {
                                 //rollback transaction
                                 self.rawConnection.run('ROLLBACK;', undefined, function () {
-                                    self.transaction = null;
-                                    callback(err);
+                                    delete self.transaction;
+                                    return callback(err);
                                 });
                             }
                             else {
                                 //commit transaction
                                 self.rawConnection.run('COMMIT;', undefined, function (err) {
-                                    self.transaction = null;
-                                    callback(err);
+                                    delete self.transaction;
+                                    return callback(err);
                                 });
                             }
                         });
