@@ -227,6 +227,21 @@ class SqliteFormatter extends SqlFormatter {
     $date(p0) {
         return 'date(' + this.escape(p0) + ')';
     }
+    /**
+     * @deprecated Use $ifNull() instead
+     * @param {*} p0 
+     * @param {*} p1 
+     * @returns 
+     */
+    $ifnull(p0, p1) {
+        return sprintf('IFNULL(%s, %s)', this.escape(p0), this.escape(p1));
+    }
+    $ifNull(p0, p1) {
+        return sprintf('IFNULL(%s, %s)', this.escape(p0), this.escape(p1));
+    }
+    $toString(p0) {
+        return sprintf('CAST(%s as TEXT)', this.escape(p0));
+    }
 }
 
 export {
