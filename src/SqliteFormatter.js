@@ -147,10 +147,11 @@ class SqliteFormatter extends SqlFormatter {
      * @returns {string}
      */
     $substring(p0, pos, length) {
-        if (length)
-            return sprintf('SUBSTR(%s,%s,%s)', this.escape(p0), pos.valueOf() + 1, length.valueOf());
-        else
-            return sprintf('SUBSTR(%s,%s)', this.escape(p0), pos.valueOf() + 1);
+        if (length) {
+            return sprintf('SUBSTR(%s,%s + 1,%s)', this.escape(p0), this.escape(pos), this.escape(length));
+        } else {
+            return sprintf('SUBSTR(%s,%s + 1)', this.escape(p0), this.escape(pos));
+        }
     }
     /**
      * Implements substring(str,pos) expression formatter.
@@ -160,10 +161,11 @@ class SqliteFormatter extends SqlFormatter {
      * @returns {string}
      */
     $substr(p0, pos, length) {
-        if (length)
-            return sprintf('SUBSTR(%s,%s,%s)', this.escape(p0), pos.valueOf() + 1, length.valueOf());
-        else
-            return sprintf('SUBSTR(%s,%s)', this.escape(p0), pos.valueOf() + 1);
+        if (length) {
+            return sprintf('SUBSTR(%s,%s + 1,%s)', this.escape(p0), this.escape(pos), this.escape(length));
+        } else {
+            return sprintf('SUBSTR(%s,%s + 1)', this.escape(p0), this.escape(pos));
+        }
     }
     /**
      * Implements length(a) expression formatter.
