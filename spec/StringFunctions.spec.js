@@ -1,3 +1,4 @@
+import { QueryField } from '@themost/query';
 import { TestApplication } from './TestApplication';
 
 describe('StringFunctions', () => {
@@ -34,6 +35,25 @@ describe('StringFunctions', () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Product')
                 .asQueryable().where('name').startsWith('Apple').equal(true).getItems();
+            expect(items).toBeInstanceOf(Array);
+            for (const item of items) {
+                expect(item.name.startsWith('Apple')).toBeTruthy();
+            }
+        });
+    });
+
+    it('should use concat()', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            let items = await context.model('Product')
+                .select(new QueryField('id'), new QueryField({
+                    name: {
+                        $concat: [
+                            new QueryField('name'),
+                            '-',
+                            new QueryField('model')
+                        ]
+                    }
+                })).where('name').startsWith('Apple').equal(true).getItems();
             expect(items).toBeInstanceOf(Array);
             for (const item of items) {
                 expect(item.name.startsWith('Apple')).toBeTruthy();

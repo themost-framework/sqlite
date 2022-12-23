@@ -136,8 +136,18 @@ class SqliteFormatter extends SqlFormatter {
      * @param {*} p1
      * @returns {string}
      */
+    // eslint-disable-next-line no-unused-vars
     $concat(p0, p1) {
-        return sprintf('(IFNULL(%s,\'\') || IFNULL(%s,\'\'))', this.escape(p0), this.escape(p1));
+        const args = Array.from(arguments);
+        if (args.length < 2) {
+            throw new Error('Concat method expects two or more arguments');
+        }
+        let result = '(';
+        result += Array.from(args).map((arg) => {
+            return `IFNULL(${this.escape(arg)},\'\')`
+        }).join(' || ');
+        result += ')';
+        return result;
     }
     /**
      * Implements substring(str,pos) expression formatter.
