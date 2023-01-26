@@ -284,43 +284,34 @@ class SqliteAdapter {
         waterfall([
             //1. Check migrations table existence
             function (cb) {
-                if (SqliteAdapter.supportMigrations) {
-                    cb(null, true);
-                    return;
-                }
-                self.table('migrations').exists(function (err, exists) {
+                void self.table('migrations').exists(function (err, exists) {
                     if (err) {
-                        cb(err);
-                        return;
+                        return cb(err);
                     }
-                    cb(null, exists);
+                    return cb(null, exists);
                 });
             },
             //2. Create migrations table, if it does not exist
             function (arg, cb) {
                 if (arg) {
-                    cb(null, 0);
-                    return;
+                    return cb(null, 0);
                 }
                 //create migrations table
-                self.execute('CREATE TABLE migrations("id" INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+                void self.execute('CREATE TABLE migrations("id" INTEGER PRIMARY KEY AUTOINCREMENT, ' +
                     '"appliesTo" TEXT NOT NULL, "model" TEXT NULL, "description" TEXT,"version" TEXT NOT NULL)', [], function (err) {
-                        if (err) {
-                            cb(err);
-                            return;
-                        }
-                        SqliteAdapter.supportMigrations = true;
-                        cb(null, 0);
-                    });
+                    if (err) {
+                        return cb(err);
+                    }
+                    return cb(null, 0);
+                });
             },
             //3. Check if migration has already been applied (true=Table version is equal to migration version, false=Table version is older from migration version)
             function (arg, cb) {
-                self.table(migration.appliesTo).version(function (err, version) {
+                void self.table(migration.appliesTo).version(function (err, version) {
                     if (err) {
-                        cb(err);
-                        return;
+                        return cb(err);
                     }
-                    cb(null, (version >= migration.version));
+                    return cb(null, (version >= migration.version));
                 });
             },
             //4a. Check table existence (-1=Migration has already been applied, 0=Table does not exist, 1=Table exists)
@@ -328,15 +319,14 @@ class SqliteAdapter {
                 //migration has already been applied (set migration.updated=true)
                 if (arg) {
                     migration.updated = true;
-                    cb(null, -1);
+                    return cb(null, -1);
                 }
                 else {
-                    self.table(migration.appliesTo).exists(function (err, exists) {
+                    void self.table(migration.appliesTo).exists(function (err, exists) {
                         if (err) {
-                            cb(err);
-                            return;
+                            return cb(err);
                         }
-                        cb(null, exists ? 1 : 0);
+                        return cb(null, exists ? 1 : 0);
                     });
                 }
             },
@@ -344,22 +334,20 @@ class SqliteAdapter {
             function (arg, cb) {
                 //migration has already been applied
                 if (arg < 0) {
-                    cb(null, [arg, null]);
-                    return;
+                    return cb(null, [arg, null]);
                 }
-                self.table(migration.appliesTo).columns(function (err, columns) {
+                void self.table(migration.appliesTo).columns(function (err, columns) {
                     if (err) {
-                        cb(err);
-                        return;
+                        return cb(err);
                     }
-                    cb(null, [arg, columns]);
+                    return cb(null, [arg, columns]);
                 });
             },
             //5. Migrate target table (create or alter)
             function (args, cb) {
                 //migration has already been applied (args[0]=-1)
                 if (args[0] < 0) {
-                    cb(null, args[0]);
+                    return cb(null, args[0]);
                 }
                 else if (args[0] === 0) {
                     //create table
