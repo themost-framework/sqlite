@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/themost-framework/sqlite#readme",
   "dependencies": {
-    "async": "^2.6.4",
+    "async": "^3.2.4",
     "sprintf-js": "^1.1.2",
     "sqlite3": "^5.0.7"
   },
