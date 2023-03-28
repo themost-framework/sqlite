@@ -273,6 +273,8 @@ class SqliteAdapter {
          * @type {DataModelMigration|*}
          */
         const migration = obj;
+        // create a copy of columns
+        const addColumns = migration.add.slice(0);
         const format = function (format, obj) {
             let result = format;
             if (/%t/.test(format))
@@ -434,38 +436,50 @@ class SqliteAdapter {
                         }
                     }
                     if (Array.isArray(migration.add)) {
-                        for (let i = 0; i < migration.add.length; i++) {
-                            let x = migration.add[i];
-                            column = columns.find((y) => {
-                                return (y.name === x.name);
-                            });
-                            if (column) {
-                                if (column.primary) {
-                                    migration.add.splice(i, 1);
-                                    i -= 1;
-                                }
-                                else {
-                                    newType = format('%t', x);
-                                    oldType = column.type.toUpperCase().concat(column.nullable ? ' NULL' : ' NOT NULL');
-                                    // trim zero scale for both new and old type
-                                    // e.g. TEXT(50,0) to TEXT(50)
-                                    const reTrimScale = /^(NUMERIC|TEXT|INTEGER)\((\d+)(,0)\)/g;
-                                    if (reTrimScale.test(newType) === true) {
-                                        // trim
-                                        newType = newType.replace(reTrimScale, '$1($2)');
-                                    }
-                                    if (reTrimScale.test(oldType) === true) {
-                                        // trim
-                                        oldType = oldType.replace(reTrimScale, '$1($2)');
-                                    }
-                                    if (newType === oldType) {
-                                        //remove column from add collection
+
+                        // find removed columns
+                        for (const column of columns) {
+                            const found = addColumns.find((x) => x.name === column.name);
+                            if (found == null) {
+                                forceAlter = true;
+                            }
+                        }
+                        if (forceAlter === false) {
+                            for (let i = 0; i < migration.add.length; i++) {
+                                let x = migration.add[i];
+                                column = columns.find((y) => {
+                                    return (y.name === x.name);
+                                });
+                                if (column) {
+                                    if (column.primary) {
                                         migration.add.splice(i, 1);
                                         i -= 1;
                                     }
                                     else {
-                                        forceAlter = true;
+                                        newType = format('%t', x);
+                                        oldType = column.type.toUpperCase().concat(column.nullable ? ' NULL' : ' NOT NULL');
+                                        // trim zero scale for both new and old type
+                                        // e.g. TEXT(50,0) to TEXT(50)
+                                        const reTrimScale = /^(NUMERIC|TEXT|INTEGER)\((\d+)(,0)\)/g;
+                                        if (reTrimScale.test(newType) === true) {
+                                            // trim
+                                            newType = newType.replace(reTrimScale, '$1($2)');
+                                        }
+                                        if (reTrimScale.test(oldType) === true) {
+                                            // trim
+                                            oldType = oldType.replace(reTrimScale, '$1($2)');
+                                        }
+                                        if (newType === oldType) {
+                                            //remove column from add collection
+                                            migration.add.splice(i, 1);
+                                            i -= 1;
+                                        }
+                                        else {
+                                            forceAlter = true;
+                                        }
                                     }
+                                } else {
+                                    forceAlter = true;
                                 }
                             }
                         }
@@ -477,10 +491,16 @@ class SqliteAdapter {
                                 const formatter = new SqliteFormatter();
                                 const renameTable = formatter.escapeName(renamed);
                                 const table = formatter.escapeName(migration.appliesTo);
+                                const existingFields = await self.table(migration.appliesTo).columnsAsync();
+                                // get indexes
+                                const indexes = await self.indexes(migration.appliesTo).listAsync();
+                                for (const index of indexes) {
+                                    await self.indexes(migration.appliesTo).dropAsync(index.name);
+                                }
                                 // rename table
-                                await self.executeAsync(`ALTER TABLE {table} RENAME TO ${renameTable}`);
+                                await self.executeAsync(`ALTER TABLE ${table} RENAME TO ${renameTable}`);
                                 // format field collection
-                                let fields = migration.add.filter((x) => {
+                                let fields = addColumns.filter((x) => {
                                     return !x.oneToMany;
                                 }).map((x) => {
                                     return format('"%f" %t', x);
@@ -489,7 +509,6 @@ class SqliteAdapter {
                                 // create table
                                 await self.executeAsync(sql);
                                 // get source fields
-                                const existingFields = await self.table(renamed).columnsAsync();
                                 const newFields = await self.table(migration.appliesTo).columnsAsync();
                                 const insertFields = [];
                                 for (const existingField of existingFields) {
