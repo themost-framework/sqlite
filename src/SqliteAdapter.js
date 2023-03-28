@@ -470,7 +470,46 @@ class SqliteAdapter {
                             }
                         }
                         if (forceAlter) {
-                            return cb(new Error('Full table migration is not yet implemented.'));
+                            // eslint-disable-next-line no-unexpected-multiline
+                            return (async function() {
+                                // prepare to rename existing table and create a new one
+                                const renamed = '__' + migration.appliesTo + '_' + migration.appliesTo + '__';
+                                const formatter = new SqliteFormatter();
+                                const renameTable = formatter.escapeName(renamed);
+                                const table = formatter.escapeName(migration.appliesTo);
+                                // rename table
+                                await self.executeAsync(`ALTER TABLE {table} RENAME TO ${renameTable}`);
+                                // format field collection
+                                let fields = migration.add.filter((x) => {
+                                    return !x.oneToMany;
+                                }).map((x) => {
+                                    return format('"%f" %t', x);
+                                }).join(', ');
+                                let sql = `CREATE TABLE ${table} (${fields})`;
+                                // create table
+                                await self.executeAsync(sql);
+                                // get source fields
+                                const existingFields = await self.table(renamed).columnsAsync();
+                                const newFields = await self.table(migration.appliesTo).columnsAsync();
+                                const insertFields = [];
+                                for (const existingField of existingFields) {
+                                    const insertField = newFields.find((x) => x.name === existingField.name);
+                                    if (insertField != null) {
+                                        insertFields.push(insertField);
+                                    }
+                                }
+                                if (insertFields.length === 0) {
+                                    throw new Error('Table migration cannot be completed because the collection of fields is empty.');
+                                }
+                                fields = insertFields.map((x) => formatter.escapeName(x.name)).join(', ');
+                                sql = `INSERT INTO ${table}(${fields}) SELECT ${fields} FROM ${renameTable}`;
+                                // insert data
+                                await self.executeAsync(sql);
+                            })().then(() => {
+                                return cb(null, 1);
+                            }).catch((error) => {
+                                return cb(error);
+                            });
                         }
                         else {
                             const formatter = new SqliteFormatter();
