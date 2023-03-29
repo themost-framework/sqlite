@@ -1,7 +1,6 @@
 // eslint-disable-next-line no-unused-vars
-import {DataApplication, DataConfigurationStrategy, NamedDataContext, DataCacheStrategy, DataContext, ODataModelBuilder, ODataConventionModelBuilder} from '@themost/data';
-import { createInstance, SqliteAdapter } from '../src';
-import path from 'path';
+import {DataApplication, DataConfigurationStrategy, DataCacheStrategy, DataContext} from '@themost/data';
+import { createInstance } from '../src';
 
 const testConnectionOptions = {
     'database': 'spec/db/local.db'
