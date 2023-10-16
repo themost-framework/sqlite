@@ -1069,11 +1069,9 @@ class SqliteAdapter {
                                             result.forEach(function (x) {
                                                 keys.forEach(function (y) {
                                                     const value = x[y];
-                                                    if (value === null) {
-                                                        delete x[y];
-                                                    } else if (typeof value === 'string' && SqlDateRegEx.test(value)) {
+                                                    if (typeof value === 'string' && SqlDateRegEx.test(value)) {
                                                         x[y] = new Date(value);
-                                                    } 
+                                                    }
                                                 });
                                             });
                                         }
@@ -1082,9 +1080,7 @@ class SqliteAdapter {
                                         keys = Object.keys(result);
                                         keys.forEach(function (y) {
                                             const value = result[y];
-                                            if (value === null) {
-                                                delete result[y];
-                                            } else if (typeof value === 'string' && SqlDateRegEx.test(value)) {
+                                            if (typeof value === 'string' && SqlDateRegEx.test(value)) {
                                                 result[y] = new Date(value);
                                             } 
                                         });
