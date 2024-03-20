@@ -198,31 +198,40 @@ class SqliteAdapter {
                     });
                 }
                 else {
+                    // set transaction mode before begin
+                    self.transaction = true;
                     //begin transaction
                     self.rawConnection.run('BEGIN TRANSACTION;', undefined, function (err) {
                         if (err) {
-                            callback(err);
-                            return;
+                            // reset transaction mode
+                            delete self.transaction;
+                            return callback(err);
                         }
-                        //initialize dummy transaction object (for future use)
-                        self.transaction = true;
-                        //execute function
-                        fn.call(self, function (err) {
-                            if (err) {
-                                //rollback transaction
-                                self.rawConnection.run('ROLLBACK;', undefined, function () {
-                                    delete self.transaction;
-                                    return callback(err);
-                                });
-                            }
-                            else {
-                                //commit transaction
+                        try {
+                            // invoke method
+                            fn(function (err) {
+                                if (err) {
+                                    // rollback transaction
+                                    return self.rawConnection.run('ROLLBACK;', undefined, function () {
+                                        // reset transcation mode on error
+                                        delete self.transaction;
+                                        return callback(err);
+                                    });
+                                }
+                                // commit transaction
                                 self.rawConnection.run('COMMIT;', undefined, function (err) {
+                                    // reset transcation mode on error
                                     delete self.transaction;
                                     return callback(err);
                                 });
-                            }
-                        });
+                            });
+                        } catch (invokeError) {
+                            return self.rawConnection.run('ROLLBACK;', undefined, function () {
+                                // reset transcation mode on error
+                                delete self.transaction;
+                                return callback(invokeError);
+                            });
+                        }
                     });
                 }
             }
