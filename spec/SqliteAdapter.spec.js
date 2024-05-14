@@ -164,4 +164,41 @@ describe('SqliteAdapter', () => {
             await db.executeAsync(`DROP TABLE ${new SqliteFormatter().escapeName('Table1')}`);
         });
     });
+
+    it('should retry when busy', async () => {
+        await Promise.all([
+            new Promise((resolve, reject) => {
+                void setTimeout(() => {
+                    app.executeInTestTranscaction(async (context) => {
+                        const item = await context.model('ActionStatusType').where('alternateName').equal('ActiveActionStatus').getItem();
+                        expect(item).toBeTruthy();
+                        await context.model('ActionStatusType').silent().save(item);
+                        await new Promise((resolveTimeout) => {
+                            setTimeout(() => {
+                                resolveTimeout();
+                            }, 500);
+                        })
+                    }).then(() => {
+                        return resolve();
+                    }).catch((err) => {
+                        return reject(err);
+                    })
+                }, 750)
+            }),
+            new Promise((resolve, reject) => {
+                void setTimeout(() => {
+                    app.executeInTestTranscaction(async (context) => {
+                        const item = await context.model('ActionStatusType').where('alternateName').equal('ActiveActionStatus').getItem();
+                        expect(item).toBeTruthy();
+                    }).then(() => {
+                        return resolve();
+                    }).catch((err) => {
+                        return reject(err);
+                    })
+                }, 1000)
+            })
+        ])
+    });
+
+
 });

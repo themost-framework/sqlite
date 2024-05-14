@@ -9,6 +9,16 @@ import sqlite from 'sqlite3';
 const sqlite3 = sqlite.verbose();
 const SqlDateRegEx = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d+\+[0-1][0-9]:[0-5][0-9]$/;
 
+/* eslint-disable no-unused-vars */
+const SQLITE_OPEN_READONLY = 0x00000001;  /* Ok for sqlite3_open_v2() */
+const SQLITE_OPEN_READWRITE = 0x00000002;  /* Ok for sqlite3_open_v2() */
+const SQLITE_OPEN_CREATE = 0x00000004;  /* Ok for sqlite3_open_v2() */
+const SQLITE_OPEN_NOMUTEX = 0x00008000; /* Ok for sqlite3_open_v2() */
+const SQLITE_OPEN_FULLMUTEX = 0x00010000;  /* Ok for sqlite3_open_v2() */
+const SQLITE_OPEN_SHAREDCACHE = 0x00020000;  /* Ok for sqlite3_open_v2() */
+const SQLITE_OPEN_PRIVATECACHE = 0x00040000;  /* Ok for sqlite3_open_v2() */
+/* eslint-enable no-unused-vars */
+
 /**
  * @class
  * @augments DataAdapter
@@ -21,6 +31,11 @@ class SqliteAdapter {
          * @type {{database: string}}
          */
         this.options = options || { database: ':memory:' };
+        // set defaults
+        if (typeof this.options.retry === 'undefined') {
+            this.options.retry = 4;
+            this.options.retryInterval = 1000;
+        }
         /**
          * Represents the database raw connection associated with this adapter
          * @type {*}
@@ -35,7 +50,7 @@ class SqliteAdapter {
         }
         else {
             //try to open or create database
-            self.rawConnection = new sqlite3.Database(self.options.database, 6, function (err) {
+            self.rawConnection = new sqlite3.Database(self.options.database, SQLITE_OPEN_READWRITE + SQLITE_OPEN_CREATE + SQLITE_OPEN_FULLMUTEX, function (err) {
                 if (err) {
                     self.rawConnection = null;
                 }
@@ -1064,11 +1079,48 @@ class SqliteAdapter {
                     //execute raw command
                     fn.call(self.rawConnection, prepared, [], function (err, result) {
                         if (err) {
-                            //log sql
-                            TraceUtils.log(sprintf('SQL Error:%s', prepared));
+                            if (err.code === 'SQLITE_BUSY') {
+                                const shouldRetry = typeof self.options.retry === 'number' && self.options.retry > 0;
+                                if (shouldRetry === false) {
+                                    TraceUtils.error(`SQL Error: ${prepared}`);
+                                    return callback(err);
+                                }
+                                const retry = self.options.retry;
+                                let retryInterval = 1000;
+                                if (typeof self.options.retryInterval === 'number' && self.options.retryInterval > 0) {
+                                    retryInterval = self.options.retryInterval;
+                                }
+                                // validate retry option
+                                if (Object.prototype.hasOwnProperty.call(callback, 'retry') === false) {
+                                    Object.defineProperty(callback, 'retry', {
+                                        configurable: true,
+                                        enumerable: false,
+                                        value: 0,
+                                        writable: true
+                                    });
+                                }
+                                if (typeof callback.retry === 'number' && callback.retry >= (retry * retryInterval)) {
+                                    delete callback.retry;
+                                    return callback(err);
+                                }
+                                // retry
+                                callback.retry += retryInterval;
+                                TraceUtils.warn(`'SQL Error:${prepared}. Retrying in ${callback.retry} ms.'`);
+                                return setTimeout(function () {
+                                    self.execute(query, values, callback);
+                                }, callback.retry);
+                            }
+                            // log sql
+                            if (Object.prototype.hasOwnProperty.call(callback, 'retry')) {
+                                delete callback.retry;
+                            }
+                            TraceUtils.error(`SQL Error: ${prepared}`);
                             callback(err);
                         }
                         else {
+                            if (Object.prototype.hasOwnProperty.call(callback, 'retry')) {
+                                delete callback.retry;
+                            }
                             if (result) {
                                 if (typeof result === 'object') {
                                     let keys;
