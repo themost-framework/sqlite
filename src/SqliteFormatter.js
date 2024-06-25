@@ -189,6 +189,9 @@ class SqliteFormatter extends SqlFormatter {
         return sprintf('CEIL(%s)', this.escape(p0));
     }
     $startswith(p0, p1) {
+        return this.$startsWith(p0, p1);
+    }
+    $startsWith(p0, p1) {
         //validate params
         if (p0 == null || p1 == null)
             return '';
@@ -201,6 +204,9 @@ class SqliteFormatter extends SqlFormatter {
         return 'LIKE(\'%' + this.escape(p1, true) + '%\',' + this.escape(p0) + ')';
     }
     $endswith(p0, p1) {
+        return this.$endsWith(p0, p1);
+    }
+    $endsWith(p0, p1) {
         //validate params
         if (p0 == null || p1 == null)
             return '';
