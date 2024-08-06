@@ -10,25 +10,28 @@ const sqlite3 = sqlite.verbose();
 const SqlDateRegEx = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d+\+[0-1][0-9]:[0-5][0-9]$/;
 
 /* eslint-disable no-unused-vars */
+// noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_READONLY = 0x00000001;  /* Ok for sqlite3_open_v2() */
 const SQLITE_OPEN_READWRITE = 0x00000002;  /* Ok for sqlite3_open_v2() */
 const SQLITE_OPEN_CREATE = 0x00000004;  /* Ok for sqlite3_open_v2() */
+// noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_NOMUTEX = 0x00008000; /* Ok for sqlite3_open_v2() */
+// noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_FULLMUTEX = 0x00010000;  /* Ok for sqlite3_open_v2() */
+// noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_SHAREDCACHE = 0x00020000;  /* Ok for sqlite3_open_v2() */
+// noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_PRIVATECACHE = 0x00040000;  /* Ok for sqlite3_open_v2() */
 /* eslint-enable no-unused-vars */
 
-/**
- * @class
- * @augments DataAdapter
- * @param {*} options
- * @constructor
- */
+
 class SqliteAdapter {
+    /**
+     * @param {*} options
+     */
     constructor(options) {
         /**
-         * @type {{database: string}}
+         * @type {{database: string,retry: number=,retryInterval: number=}}
          */
         this.options = options || { database: ':memory:' };
         // set defaults
@@ -91,7 +94,7 @@ class SqliteAdapter {
             }
         }
         catch (err) {
-            TraceUtils.log('An error occured while closing database.');
+            TraceUtils.log('An error occurred while closing database.');
             TraceUtils.log(err);
             //call callback without error
             callback();
@@ -173,6 +176,9 @@ class SqliteAdapter {
             case 'Short':
                 s = 'INTEGER(2,0)';
                 break;
+            case 'Json':
+                s = 'JSON HIDDEN';
+                break;
             default:
                 s = 'INTEGER';
                 break;
@@ -228,21 +234,21 @@ class SqliteAdapter {
                                 if (err) {
                                     // rollback transaction
                                     return self.rawConnection.run('ROLLBACK;', undefined, function () {
-                                        // reset transcation mode on error
+                                        // reset transaction mode on error
                                         delete self.transaction;
                                         return callback(err);
                                     });
                                 }
                                 // commit transaction
                                 self.rawConnection.run('COMMIT;', undefined, function (err) {
-                                    // reset transcation mode on error
+                                    // reset transaction mode on error
                                     delete self.transaction;
                                     return callback(err);
                                 });
                             });
                         } catch (invokeError) {
                             return self.rawConnection.run('ROLLBACK;', undefined, function () {
-                                // reset transcation mode on error
+                                // reset transaction mode on error
                                 delete self.transaction;
                                 return callback(invokeError);
                             });
@@ -294,7 +300,7 @@ class SqliteAdapter {
             return callback();
         }
         /**
-         * @type {DataModelMigration|*}
+         * @type {*}
          */
         const migration = obj;
         // create a copy of columns
@@ -394,7 +400,7 @@ class SqliteAdapter {
                 else if (args[0] === 1) {
                     const expressions = [];
                     const /**
-                     * @type {{columnName:string,ordinal:number,dataType:*, maxLength:number,isNullable:number,,primary:boolean }[]}
+                     * @type {{name: string,columnName:string,ordinal:number,dataType:*, maxLength:number,isNullable:number,primary:boolean }[]}
                      */ columns = args[1];
                     let forceAlter = false;
                     let column;
@@ -522,7 +528,7 @@ class SqliteAdapter {
                                     await self.indexes(migration.appliesTo).dropAsync(index.name);
                                 }
                                 // rename table
-                                await self.executeAsync(`ALTER TABLE ${table} RENAME TO ${renameTable}`);
+                                await self.executeAsync(`ALTER TABLE ${table} RENAME TO ${renameTable}`, []);
                                 // format field collection
                                 let fields = addColumns.filter((x) => {
                                     return !x.oneToMany;
@@ -531,7 +537,7 @@ class SqliteAdapter {
                                 }).join(', ');
                                 let sql = `CREATE TABLE ${table} (${fields})`;
                                 // create table
-                                await self.executeAsync(sql);
+                                await self.executeAsync(sql, []);
                                 // get source fields
                                 const newFields = await self.table(migration.appliesTo).columnsAsync();
                                 const insertFields = [];
@@ -547,7 +553,7 @@ class SqliteAdapter {
                                 fields = insertFields.map((x) => formatter.escapeName(x.name)).join(', ');
                                 sql = `INSERT INTO ${table}(${fields}) SELECT ${fields} FROM ${renameTable}`;
                                 // insert data
-                                await self.executeAsync(sql);
+                                await self.executeAsync(sql, []);
                             })().then(() => {
                                 return cb(null, 1);
                             }).catch((error) => {
@@ -631,7 +637,7 @@ class SqliteAdapter {
     }
     /**
      * 
-     * @param {SqliteAdapterMigration} obj 
+     * @param {*} obj
      * @returns {*}
      */
     migrateAsync(obj) {
@@ -1039,6 +1045,9 @@ class SqliteAdapter {
      */
     execute(query, values, callback) {
         const self = this;
+        /**
+         * @type {string|null}
+         */
         let sql = null;
         try {
             if (typeof query === 'string') {
@@ -1046,7 +1055,7 @@ class SqliteAdapter {
                 sql = query;
             }
             else {
-                //format query expression or any object that may be act as query expression
+                //format query expression or any object that may act as query expression
                 const formatter = new SqliteFormatter();
                 sql = formatter.format(query);
             }
