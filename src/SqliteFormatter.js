@@ -260,6 +260,27 @@ class SqliteFormatter extends SqlFormatter {
     $toString(p0) {
         return sprintf('CAST(%s as TEXT)', this.escape(p0));
     }
+
+    /**
+     * @param {*} expr
+     * @return {string}
+     */
+    $jsonGet(expr) {
+        if (typeof expr.$name !== 'string') {
+            throw new Error('Invalid json expression. Expected a string');
+        }
+        const parts = expr.$name.split('.');
+        const extract = this.escapeName(parts.splice(0, 2).join('.'));
+        return `json_extract(${extract}, '$.${parts.join('.')}')`;
+    }
+
+    /**
+     * @param {*} expr
+     * @return {string}
+     */
+    $jsonArray(expr) {
+        return `json_each(${this.escapeName(expr)})`;
+    }
 }
 
 export {

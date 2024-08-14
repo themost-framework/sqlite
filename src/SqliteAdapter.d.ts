@@ -3,6 +3,7 @@
 import { DataAdapterBase, DataAdapterIndexes, DataAdapterMigration, DataAdapterTable, DataAdapterView } from '@themost/common';
 
 export declare class SqliteAdapter implements DataAdapterBase {
+    constructor(options: any);
     rawConnection?: any;
     options?: any;
     selectIdentityAsync(entity: string, attribute: string): Promise<any>;
