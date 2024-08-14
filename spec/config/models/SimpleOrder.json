@@ -3,6 +3,7 @@
     "name": "SimpleOrder",
     "title": "SimpleOrders",
     "source": "SimpleOrders",
+    "view": "SimpleOrders",
     "hidden": false,
     "sealed": false,
     "abstract": false,

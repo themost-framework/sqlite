@@ -104,6 +104,7 @@ function onResolvingJsonMember(event) {
         return;
     }
     event.object = event.target.$collection;
+    // noinspection JSCheckFunctionSignatures
     event.member = new MethodCallExpression('jsonGet', [
         new MemberExpression(event.target.$collection + '.' + event.fullyQualifiedMember)
     ]);
@@ -242,6 +243,76 @@ describe('SqlFormatter', () => {
                     const customer = JSON.parse(result.customer);
                     expect(customer).toBeTruthy();
                 }
+            }
+        });
+    });
+
+    it('should select and return attribute from json field using closures', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const Orders = context.model('SimpleOrder').silent();
+            const results = await Orders.select((x) => {
+                return {
+                    id: x.id,
+                    customer: x.customer.description,
+                    streetAddress: x.customer.address.streetAddress,
+                    releaseYear: x.orderedItem.releaseDate.getFullYear()
+                }
+            }).getItems();
+            expect(results).toBeTruthy();
+            for (const result of results) {
+                expect(result).toBeTruthy();
+                expect(result.releaseYear).toBeTruthy();
+            }
+        });
+    });
+
+    it('should filter results using attribute extracted from json field', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const Orders = context.model('SimpleOrder').silent();
+            const results = await Orders.select((x) => {
+                return {
+                    id: x.id,
+                    customerIdentifier: x.customer.id,
+                    customer: x.customer.description
+                }
+            })
+                .where((x) => x.customer.description === 'Eric Thomas')
+                .getItems();
+            expect(results).toBeTruthy();
+            for (const result of results) {
+                expect(result).toBeTruthy();
+                expect(result.customer).toEqual('Eric Thomas');
+            }
+        });
+    });
+
+    it('should select and return attribute from json field', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const Orders = context.model('SimpleOrder').silent();
+            const q = await Orders.filterAsync({
+                $select: 'id,customer/description as customer,year(orderedItem/releaseDate) as releaseYear',
+            })
+            const results = await q.getItems();
+            expect(results).toBeTruthy();
+            for (const result of results) {
+                expect(result).toBeTruthy();
+                expect(result.releaseYear).toBeTruthy();
+            }
+        });
+    });
+
+    it('should filter using attribute from json field', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const Orders = context.model('SimpleOrder').silent();
+            const q = await Orders.filterAsync({
+                $select: 'id,customer/id as customerIdentifier, customer/description as customer,year(orderedItem/releaseDate) as releaseYear',
+                $filter: 'customer/description eq \'Eric Thomas\''
+            })
+            const results = await q.getItems();
+            expect(results).toBeTruthy();
+            for (const result of results) {
+                expect(result).toBeTruthy();
+                expect(result.customer).toEqual('Eric Thomas');
             }
         });
     });
