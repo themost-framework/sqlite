@@ -29,7 +29,7 @@
     "sqlite3": "^5.1.7"
   },
   "engines": {
-    "node": ">=12"
+    "node": ">=14"
   },
   "devDependencies": {
     "@babel/cli": "^7.17.6",
@@ -41,12 +41,14 @@
     "@rollup/plugin-commonjs": "^22.0.0",
     "@themost/data": "^2.8.4",
     "@themost/peers": "^1.0.2",
-    "@themost/query": "^2.5.19",
+    "@themost/query": "^2.14.5",
     "@themost/xml": "^2.5.2",
     "dotenv": "^16.0.0",
     "eslint": "^8.15.0",
     "jasmine": "^4.1.0",
     "jasmine-spec-reporter": "^7.0.0",
+    "mathjs": "^13.2.0",
+    "moment": "^2.30.1",
     "nyc": "^15.1.0",
     "rimraf": "^3.0.2",
     "rollup": "^2.73.0",

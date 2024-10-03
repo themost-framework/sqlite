@@ -6,6 +6,7 @@ import {TraceUtils}  from '@themost/common';
 import { QueryExpression, QueryField, SqlUtils } from '@themost/query';
 import { SqliteFormatter } from './SqliteFormatter';
 import sqlite from 'sqlite3';
+import extensions from './extension.config';
 const sqlite3 = sqlite.verbose();
 const SqlDateRegEx = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d+\+[0-1][0-9]:[0-5][0-9]$/;
 
@@ -26,6 +27,9 @@ class SqliteAdapter {
          * @type {*}
          */
         this.rawConnection = null;
+
+        this.extensions = Object.assign({}, extensions, this.options.extensions);
+
     }
     open(callback) {
         const self = this;
@@ -39,7 +43,16 @@ class SqliteAdapter {
                 if (err) {
                     self.rawConnection = null;
                 }
-                callback(err);
+                void eachSeries(Object.keys(self.extensions), function (key, cb) {
+                    if (Object.prototype.hasOwnProperty.call(self.extensions, key)) {
+                        const extensionPath = self.extensions[key];
+                        void self.rawConnection.loadExtension(extensionPath, function (err) {
+                            cb(err);
+                        });
+                    }
+                }, function (err) {
+                    callback(err);
+                });
             });
         }
     }

@@ -254,6 +254,56 @@ class SqliteFormatter extends SqlFormatter {
     $toString(p0) {
         return sprintf('CAST(%s as TEXT)', this.escape(p0));
     }
+
+    $uuid() {
+        return 'uuid()'
+    }
+    
+    $toGuid(expr) {
+        return sprintf('uuid(HASHBYTES(\'MD5\',CONVERT(VARCHAR(MAX), %s)))', this.escape(expr));
+    }
+
+    $toInt(expr) {
+        return sprintf('CAST(%s AS INT)', this.escape(expr));
+    }
+
+    $toDouble(expr) {
+        return this.$toDecimal(expr, 19, 8);
+    }
+
+    /**
+     * @param {*} expr 
+     * @param {number=} precision 
+     * @param {number=} scale 
+     * @returns 
+     */
+    $toDecimal(expr, precision, scale) {
+        const p = typeof precision === 'number' ? parseInt(precision,10) : 19;
+        const s = typeof scale === 'number' ? parseInt(scale,10) : 8;
+        return sprintf('CAST(%s as DECIMAL(%s,%s))', this.escape(expr), p, s);
+    }
+
+    $toLong(expr) {
+        return sprintf('CAST(%s AS BIGINT)', this.escape(expr));
+    }
+
+    /**
+     * 
+     * @param {('date'|'datetime'|'timestamp')} type 
+     * @returns 
+     */
+    $getDate(type) {
+        switch (type) {
+            case 'date':
+                return 'CAST(GETDATE() AS DATE)';
+            case 'datetime':
+                return 'CAST(GETDATE() AS DATETIME)';
+            case 'timestamp':
+                return 'CAST(GETDATE() AS DATETIMEOFFSET)';
+            default:
+                return 'GETDATE()'
+        }
+    }
 }
 
 export {
