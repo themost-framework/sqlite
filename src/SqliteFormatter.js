@@ -252,15 +252,15 @@ class SqliteFormatter extends SqlFormatter {
         return sprintf('IFNULL(%s, %s)', this.escape(p0), this.escape(p1));
     }
     $toString(p0) {
-        return sprintf('CAST(%s as TEXT)', this.escape(p0));
+        return sprintf('CAST(%s AS TEXT)', this.escape(p0));
     }
 
     $uuid() {
-        return 'uuid()'
+        return 'uuid4()'
     }
     
     $toGuid(expr) {
-        return sprintf('uuid(HASHBYTES(\'MD5\',CONVERT(VARCHAR(MAX), %s)))', this.escape(expr));
+        return sprintf('uuid_str(crypto_md5(%s))', this.escape(expr));
     }
 
     $toInt(expr) {
@@ -295,13 +295,13 @@ class SqliteFormatter extends SqlFormatter {
     $getDate(type) {
         switch (type) {
             case 'date':
-                return 'CAST(GETDATE() AS DATE)';
+                return 'time_fmt_date(time_now())';
             case 'datetime':
-                return 'CAST(GETDATE() AS DATETIME)';
+                return 'time_fmt_datetime(time_now())';
             case 'timestamp':
-                return 'CAST(GETDATE() AS DATETIMEOFFSET)';
+                return 'time_fmt_datetime(time_now())';
             default:
-                return 'GETDATE()'
+                return 'time_fmt_datetime(time_now())'
         }
     }
 }

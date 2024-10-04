@@ -24,7 +24,7 @@ describe('Type Casting', () => {
         //
     });
 
-    fit('should use uuid()', async () => {
+    it('should use uuid()', async () => {
         await app.executeInTestTranscaction(async (context) => {
             const query = new QueryExpression().select(new QueryField({
                 id: {
@@ -50,7 +50,7 @@ describe('Type Casting', () => {
             query.$fixed = true;
             const [item] = await context.db.executeAsync(query, []);
             expect(item).toBeTruthy();
-            expect(item.currentDate instanceof Date).toBeTruthy()
+            expect(typeof item.currentDate === 'string').toBeTruthy()
         });
     });
 
@@ -108,7 +108,7 @@ describe('Type Casting', () => {
         });
         const expr = new QueryExpression().where(id).equal(orderedItem);
         const sql = formatter.formatWhere(expr.$where);
-        expect(sql).toEqual('([ProductData].[id]=CAST([OrderData].[orderedItem] AS NVARCHAR))');
+        expect(sql).toEqual('(`ProductData`.`id`=CAST(`OrderData`.`orderedItem` AS TEXT))');
     });
 
     it('should use $toString inside closure', async () => {
@@ -185,8 +185,9 @@ describe('Type Casting', () => {
             const now = new Date();
             const { currentDate } = item;
             expect(currentDate).toBeTruthy();
-            expect(moment(now).format('YYYY-MM-DD'))
-                .toEqual(moment(currentDate).format('YYYY-MM-DD'));
+            const nowStr = moment(now).format('YYYY-MM-DD');
+            const currentDateStr = moment(currentDate).format('YYYY-MM-DD');
+            expect(nowStr).toEqual(currentDateStr);
         });
     });
 });

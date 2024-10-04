@@ -6,9 +6,16 @@ import {TraceUtils}  from '@themost/common';
 import { QueryExpression, QueryField, SqlUtils } from '@themost/query';
 import { SqliteFormatter } from './SqliteFormatter';
 import sqlite from 'sqlite3';
-import extensions from './extension.config';
+import path from 'path';
 const sqlite3 = sqlite.verbose();
 const SqlDateRegEx = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d+\+[0-1][0-9]:[0-5][0-9]$/;
+
+const SqliteExtensions = {
+    uuid: path.resolve(__dirname, '../lib/uuid'), // Universally Unique IDentifiers
+    crypto: path.resolve(__dirname, '../lib/crypto'), // hashing, encoding and decoding data
+    regexp: path.resolve(__dirname, '../lib/regexp'), // regular expressions
+    time: path.resolve(__dirname, '../lib/time') // high-precision date/time
+}
 
 /**
  * @class
@@ -28,7 +35,7 @@ class SqliteAdapter {
          */
         this.rawConnection = null;
 
-        this.extensions = Object.assign({}, extensions, this.options.extensions);
+        this.extensions = Object.assign({}, SqliteExtensions, this.options.extensions);
 
     }
     open(callback) {

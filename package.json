@@ -7,11 +7,15 @@
   "module": "dist/index.esm.js",
   "scripts": {
     "test": "jasmine",
+    "postinstall": "node postinstall.js",
     "build": "rimraf dist && rollup --config rollup.config.js"
   },
   "peerDependencies": {
     "@themost/common": "^2",
     "@themost/query": "^2"
+  },
+  "config": {
+    "sqleanVersion": "0.27.1"
   },
   "repository": {
     "type": "git",
@@ -26,7 +30,8 @@
   "dependencies": {
     "async": "^2.6.4",
     "sprintf-js": "^1.1.2",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "unzipper": "^0.12.3"
   },
   "engines": {
     "node": ">=14"
@@ -39,6 +44,7 @@
     "@babel/register": "^7.17.0",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-commonjs": "^22.0.0",
+    "@themost/common": "^2.11.0",
     "@themost/data": "^2.8.4",
     "@themost/peers": "^1.0.2",
     "@themost/query": "^2.14.5",
