@@ -1,5 +1,6 @@
-import { SqliteFormatter } from '../src/SqliteFormatter';
+import { SqliteFormatter } from '@themost/sqlite';
 import { TestApplication } from './TestApplication';
+import moment from 'moment';
 
 describe('SqliteFormatter', () => {
     /**
@@ -41,7 +42,9 @@ describe('SqliteFormatter', () => {
         expect(formatter.escapeConstant(10.45)).toEqual('10.45');
         expect(formatter.escapeConstant('test')).toEqual('\'test\'');
         expect(formatter.escapeConstant(true)).toEqual('1');
-        expect(formatter.escapeConstant(new Date('2019-05-15 12:45:00'))).toEqual('\'2019-05-15 12:45:00.000+00:00\'');
+        const strDate = formatter.escapeConstant(new Date('2019-05-15 12:45:00'));
+        const expected = moment(new Date('2019-05-15 12:45:00')).format('\'YYYY-MM-DD HH:mm:ss.000Z\'');
+        expect(strDate).toEqual(expected);
     });
 
     it('should should use limit select', async () => {
