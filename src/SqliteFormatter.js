@@ -323,13 +323,16 @@ class SqliteFormatter extends SqlFormatter {
     $getDate(type) {
         switch (type) {
             case 'date':
-                return 'time_fmt_date(time_now())';
+                return 'date(\'now\')';
             case 'datetime':
-                return 'time_fmt_datetime(time_now())';
+                // eslint-disable-next-line quotes
+                return `strftime('%F %H:%M:%f+00:00', 'now')`;
             case 'timestamp':
-                return 'time_fmt_datetime(time_now())';
+                // eslint-disable-next-line quotes
+                return `DATETIME('now', 'localtime') || PRINTF('%+05d', STRFTIME('%H%M', DATE('now')||'T12:00', 'localtime') - STRFTIME('%H%M', DATE('now')||'T12:00'))`;
             default:
-                return 'time_fmt_datetime(time_now())'
+                // eslint-disable-next-line quotes
+                return `strftime('%F %H:%M:%f+00:00', 'now')`;
         }
     }
 }

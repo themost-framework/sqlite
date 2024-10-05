@@ -54,6 +54,22 @@ describe('Type Casting', () => {
         });
     });
 
+    it('should use getDate() for datetime', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const query = new QueryExpression().select(new QueryField({
+                currentDateTime: {
+                    $getDate: [
+                        'datetime'
+                    ]
+                }
+            })).from(new QueryEntity('t0'));
+            query.$fixed = true;
+            const [item] = await context.db.executeAsync(query, []);
+            expect(item).toBeTruthy();
+            expect(item.currentDateTime instanceof Date).toBeTruthy()
+        });
+    });
+
     it('should use toGuid()', async () => {
         await app.executeInTestTranscaction(async (context) => {
             const query = new QueryExpression().select(new QueryField({

@@ -48,7 +48,7 @@ function unzipAsync(zipFile, dest) {
     let arch = os.arch();
     switch (platform) {
         case 'win32':
-            platform = 'windows';
+            platform = 'win';
             break;
         case 'darwin':
             platform = 'macos';
