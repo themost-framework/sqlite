@@ -45,7 +45,7 @@ function unzipAsync(zipFile, dest) {
     // get platform e.g. windows, macos, linux
     let platform = os.platform();
     // get architecture e.g. x64, arm64
-    const arch = os.arch();
+    let arch = os.arch();
     switch (platform) {
         case 'win32':
             platform = 'windows';
@@ -55,6 +55,7 @@ function unzipAsync(zipFile, dest) {
             break;
         case 'linux':
             platform = 'linux';
+            arch = arch === 'x64' ? 'x86' : arch;
             break;
         default:
             // eslint-disable-next-line no-case-declarations
