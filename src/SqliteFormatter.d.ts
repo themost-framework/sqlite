@@ -2,5 +2,6 @@
 import { SqlFormatter } from "@themost/query";
 
 export declare class SqliteFormatter extends SqlFormatter {
-    
 }
+
+export declare function timezone(): string;

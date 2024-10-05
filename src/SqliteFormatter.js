@@ -9,6 +9,10 @@ const DOUBLE_QUOTE_ESCAPE = '"';
 const REGEXP_SLASH=/\\\\/g;
 const SLASH_ESCAPE = '\\';
 
+function timezone() {
+    const offset = new Date().getTimezoneOffset();
+    return (offset <= 0 ? '+' : '-') + zeroPad(-Math.floor(offset / 60), 2) + ':' + zeroPad(offset % 60, 2);
+}
 
 function zeroPad(number, length) {
     number = number || 0;
@@ -211,31 +215,31 @@ class SqliteFormatter extends SqlFormatter {
         return 'LIKE(\'%' + this.escape(p1, true) + '\',' + this.escape(p0) + ')';
     }
     $day(p0) {
-        return 'CAST(strftime(\'%d\', ' + this.escape(p0) + ') AS INTEGER)';
+        return `CAST(strftime('%d', ${this.escape(p0)}) AS INTEGER)`;
     }
     $dayOfMonth(p0) {
-        return 'CAST(strftime(\'%d\', ' + this.escape(p0) + ') AS INTEGER)';
+        return `CAST(strftime('%d', ${this.escape(p0)}) AS INTEGER)`;
     }
     $month(p0) {
-        return 'CAST(strftime(\'%m\', ' + this.escape(p0) + ') AS INTEGER)';
+        return `CAST(strftime('%m', ${this.escape(p0)}) AS INTEGER)`;
     }
     $year(p0) {
-        return 'CAST(strftime(\'%Y\', ' + this.escape(p0) + ') AS INTEGER)';
+        return `CAST(strftime('%Y', ${this.escape(p0)}) AS INTEGER)`;
     }
     $hour(p0) {
-        return 'CAST(strftime(\'%H\', ' + this.escape(p0) + ') AS INTEGER)';
+        return `CAST(strftime('%H', ${this.escape(p0)}) AS INTEGER)`;
     }
     $hours(p0) {
         return this.$hour(p0);
     }
     $minute(p0) {
-        return 'CAST(strftime(\'%M\', ' + this.escape(p0) + ') AS INTEGER)';
+        return `CAST(strftime('%M', ${this.escape(p0)}) AS INTEGER)`;
     }
     $minutes(p0) {
         return this.$minute(p0);
     }
     $second(p0) {
-        return 'CAST(strftime(\'%S\', ' + this.escape(p0) + ') AS INTEGER)';
+        return `CAST(strftime('%S', ${this.escape(p0)}) AS INTEGER)`;
     }
     $seconds(p0) {
         return this.$second(p0);
@@ -336,5 +340,6 @@ class SqliteFormatter extends SqlFormatter {
 }
 
 export {
-    SqliteFormatter
+    SqliteFormatter,
+    timezone
 };

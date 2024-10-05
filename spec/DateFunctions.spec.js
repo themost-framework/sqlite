@@ -60,11 +60,12 @@ describe('DateFunctions', () => {
     it('should use getFullYear()', async () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Order')
-                .asQueryable().where('orderDate').getFullYear().equal(2019).silent().getItems();
-            expect(items).toBeInstanceOf(Array);
+                .asQueryable().where('orderDate').getFullYear().equal(2019)
+                .flatten().silent().getItems();
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
-                expect(item.orderDate.getFullYear()).toEqual(2019);
+                const fullYear = item.orderDate.getFullYear();
+                expect(fullYear).toEqual(2019);
             }
         });
     });
