@@ -329,7 +329,7 @@ class SqliteFormatter extends SqlFormatter {
                 return `strftime('%F %H:%M:%f+00:00', 'now')`;
             case 'timestamp':
                 // eslint-disable-next-line quotes
-                return `DATETIME('now', 'localtime') || PRINTF('%+05d', STRFTIME('%H%M', DATE('now')||'T12:00', 'localtime') - STRFTIME('%H%M', DATE('now')||'T12:00'))`;
+                return `STRFTIME('%Y-%m-%d %H:%M:%f', DATETIME('now', 'localtime')) || PRINTF('%+.2d:%.2d', ROUND((JULIANDAY('now', 'localtime') - JULIANDAY('now')) * 24), ABS(ROUND((JULIANDAY('now', 'localtime') - JULIANDAY('now')) * 24 * 60) % 60))`;
             default:
                 // eslint-disable-next-line quotes
                 return `strftime('%F %H:%M:%f+00:00', 'now')`;
