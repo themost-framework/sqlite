@@ -2,8 +2,6 @@
 
 import { sprintf } from 'sprintf-js';
 import { SqlFormatter } from '@themost/query';
-import {floor} from 'mathjs';
-
 const REGEXP_SINGLE_QUOTE=/\\'/g;
 const SINGLE_QUOTE_ESCAPE ='\'\'';
 const REGEXP_DOUBLE_QUOTE=/\\"/g;
@@ -306,8 +304,8 @@ class SqliteFormatter extends SqlFormatter {
      * @returns
      */
     $toDecimal(expr, precision, scale) {
-        const p = typeof precision === 'number' ? floor(precision) : 19;
-        const s = typeof scale === 'number' ? floor(scale) : 8;
+        const p = typeof precision === 'number' ? Math.floor(precision) : 19;
+        const s = typeof scale === 'number' ? Math.floor(scale) : 8;
         return sprintf('CAST(%s as DECIMAL(%s,%s))', this.escape(expr), p, s);
     }
 
