@@ -2,6 +2,7 @@
 
 import { sprintf } from 'sprintf-js';
 import { SqlFormatter } from '@themost/query';
+import {floor} from 'mathjs';
 
 const REGEXP_SINGLE_QUOTE=/\\'/g;
 const SINGLE_QUOTE_ESCAPE ='\'\'';
@@ -132,19 +133,18 @@ class SqliteFormatter extends SqlFormatter {
     }
     /**
      * Implements concat(a,b) expression formatter.
-     * @param {*} p0
-     * @param {*} p1
+     * @param {...*} arg
      * @returns {string}
      */
     // eslint-disable-next-line no-unused-vars
-    $concat(p0, p1) {
+    $concat(arg) {
         const args = Array.from(arguments);
         if (args.length < 2) {
             throw new Error('Concat method expects two or more arguments');
         }
         let result = '(';
         result += Array.from(args).map((arg) => {
-            return `IFNULL(${this.escape(arg)},\'\')`
+            return `IFNULL(${this.escape(arg)},'')`
         }).join(' || ');
         result += ')';
         return result;
@@ -258,7 +258,7 @@ class SqliteFormatter extends SqlFormatter {
         return sprintf('IFNULL(%s, %s)', this.escape(p0), this.escape(p1));
     }
     $toString(p0) {
-        return sprintf('CAST(%s as TEXT)', this.escape(p0));
+        return sprintf('CAST(%s AS TEXT)', this.escape(p0));
     }
 
     /**
@@ -280,6 +280,57 @@ class SqliteFormatter extends SqlFormatter {
      */
     $jsonArray(expr) {
         return `json_each(${this.escapeName(expr)})`;
+    }
+
+    $uuid() {
+        return 'uuid4()'
+    }
+
+    $toGuid(expr) {
+        return sprintf('uuid_str(crypto_md5(%s))', this.escape(expr));
+    }
+
+    $toInt(expr) {
+        return sprintf('CAST(%s AS INT)', this.escape(expr));
+    }
+
+    $toDouble(expr) {
+        return this.$toDecimal(expr, 19, 8);
+    }
+
+    // noinspection JSCheckFunctionSignatures
+    /**
+     * @param {*} expr
+     * @param {number=} precision
+     * @param {number=} scale
+     * @returns
+     */
+    $toDecimal(expr, precision, scale) {
+        const p = typeof precision === 'number' ? floor(precision) : 19;
+        const s = typeof scale === 'number' ? floor(scale) : 8;
+        return sprintf('CAST(%s as DECIMAL(%s,%s))', this.escape(expr), p, s);
+    }
+
+    $toLong(expr) {
+        return sprintf('CAST(%s AS BIGINT)', this.escape(expr));
+    }
+
+    /**
+     *
+     * @param {('date'|'datetime'|'timestamp')} type
+     * @returns
+     */
+    $getDate(type) {
+        switch (type) {
+            case 'date':
+                return 'time_fmt_date(time_now())';
+            case 'datetime':
+                return 'time_fmt_datetime(time_now())';
+            case 'timestamp':
+                return 'time_fmt_datetime(time_now())';
+            default:
+                return 'time_fmt_datetime(time_now())'
+        }
     }
 }
 

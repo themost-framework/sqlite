@@ -5,6 +5,7 @@ import {waterfall, eachSeries} from 'async';
 import {TraceUtils}  from '@themost/common';
 import { QueryExpression, QueryField, SqlUtils } from '@themost/query';
 import { SqliteFormatter } from './SqliteFormatter';
+import { SqliteExtensions } from './SqliteExtensions';
 import sqlite from 'sqlite3';
 const sqlite3 = sqlite.verbose();
 const SqlDateRegEx = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d+\+[0-1][0-9]:[0-5][0-9]$/;
@@ -44,22 +45,31 @@ class SqliteAdapter {
          * @type {*}
          */
         this.rawConnection = null;
+        this.extensions = Object.assign({}, SqliteExtensions, this.options.extensions);
     }
     open(callback) {
         const self = this;
         callback = callback || function () { };
         if (self.rawConnection) {
-            callback();
+            return callback();
         }
-        else {
-            //try to open or create database
-            self.rawConnection = new sqlite3.Database(self.options.database, SQLITE_OPEN_READWRITE + SQLITE_OPEN_CREATE + SQLITE_OPEN_FULLMUTEX, function (err) {
-                if (err) {
-                    self.rawConnection = null;
+        //try to open or create database
+        self.rawConnection = new sqlite3.Database(self.options.database, 6, function (err) {
+            if (err) {
+                self.rawConnection = null;
+                return callback(err);
+            }
+            void eachSeries(Object.keys(self.extensions), function (key, cb) {
+                if (Object.prototype.hasOwnProperty.call(self.extensions, key)) {
+                    const extensionPath = self.extensions[key];
+                    void self.rawConnection.loadExtension(extensionPath, function (err) {
+                        cb(err);
+                    });
                 }
+            }, function (err) {
                 callback(err);
             });
-        }
+        });
     }
 
     /**
