@@ -23,6 +23,8 @@ jsconfig.json
 # test
 spec
 .env
+jest.config.js
+jest.setup.js
 
 # github
 .github

@@ -23,7 +23,7 @@ describe('SqliteFormatter', () => {
     it('should get data', async () => {
         await app.executeInTestTranscaction(async (context) => {
             const items = await context.model('ActionStatusType').silent().getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeTruthy();
         });
     });
@@ -52,7 +52,7 @@ describe('SqliteFormatter', () => {
             const items = await context.model('Person').asQueryable()
                 .orderBy('id')
                 .take(5).silent().getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBe(5);
             const moreItems = await context.model('Person').asQueryable()
                 .orderBy('id')
@@ -119,7 +119,7 @@ describe('SqliteFormatter', () => {
                     'count(id) as total'
                 ).groupBy('orderedItem/name')
                 .getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeGreaterThan(0);
         });
     });
