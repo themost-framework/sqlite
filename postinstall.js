@@ -5,7 +5,22 @@ const path = require('path');
 const { promisify } = require('util');
 const packageJson = require('./package.json');
 const unzipper = require('unzipper');
-const mkdirAsync = promisify(fs.mkdir);
+
+function mkdirAsync(dir) {
+    return new Promise((resolve, reject) => {
+        void fs.stat(dir, function (err, stats) {
+            if (err && err.code !== 'ENOENT') {
+                return reject(err);
+            }
+            void fs.mkdir(dir, { recursive: true }, function (err) {
+                if (err) {
+                    return reject(err);
+                }
+                return resolve();
+            });
+        })
+    });
+}
 
 function downloadAsync(url, dest) {
     return new Promise((resolve, reject) => {
@@ -52,6 +67,7 @@ function unzipAsync(zipFile, dest) {
             break;
         case 'darwin':
             platform = 'macos';
+            arch = arch === 'x64' ? 'x86' : arch;
             break;
         case 'linux':
             platform = 'linux';
