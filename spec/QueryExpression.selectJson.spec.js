@@ -123,6 +123,9 @@ describe('SqlFormatter', () => {
         const {db} = context;
         await createSimpleOrders(db);
     });
+    afterAll(async () => {
+        await app.finalize();
+    });
     beforeEach(async () => {
         await context.finalizeAsync();
     });

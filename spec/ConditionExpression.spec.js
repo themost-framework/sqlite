@@ -13,6 +13,9 @@ describe('ConditionExpression', () => {
          app = new TestApplication(__dirname);
          context = app.createContext();
      });
+     afterAll(async () => {
+        await app.finalize();
+    });
      beforeEach(async () => {
          await context.finalizeAsync();
      });
@@ -76,7 +79,7 @@ describe('ConditionExpression', () => {
             .where('category').equal('Laptops')
             .orderBy('price');
         const results = await context.db.executeAsync(query);
-        expect(results).toBeInstanceOf(Array);
+        expect(Array.isArray(results)).toBeTruthy();
         expect(results.length).toBeTruthy();
         const values = [
             'Expensive',
@@ -186,7 +189,7 @@ describe('ConditionExpression', () => {
             priceDescription
         ).from('ProductData').where('category').equal('Laptops');
         const results = await context.db.executeAsync(query);
-        expect(results).toBeInstanceOf(Array);
+        expect(Array.isArray(results)).toBeTruthy();
         expect(results.length).toBeTruthy();
         const values = [
             'Expensive',

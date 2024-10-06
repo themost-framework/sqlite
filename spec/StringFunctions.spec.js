@@ -24,7 +24,7 @@ describe('StringFunctions', () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Product')
                 .asQueryable().where('name').substr(0, 2).equal('Ap').getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             for (const item of items) {
                 expect(item.name.substr(0, 2)).toEqual('Ap');
             }
@@ -35,7 +35,7 @@ describe('StringFunctions', () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Product')
                 .asQueryable().where('name').startsWith('Apple').equal(true).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             for (const item of items) {
                 expect(item.name.startsWith('Apple')).toBeTruthy();
             }
@@ -54,7 +54,7 @@ describe('StringFunctions', () => {
                         ]
                     }
                 })).where('name').startsWith('Apple').equal(true).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             for (const item of items) {
                 expect(item.name.startsWith('Apple')).toBeTruthy();
             }
@@ -65,7 +65,7 @@ describe('StringFunctions', () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Product')
                 .asQueryable().where('name').toLowerCase().equal('apple ipad air').getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
                 expect(item.name.toLowerCase()).toEqual('apple ipad air');
@@ -77,7 +77,7 @@ describe('StringFunctions', () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Product')
                 .asQueryable().where('name').toUpperCase().equal('APPLE IPAD AIR').getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
                 expect(item.name.toUpperCase()).toEqual('APPLE IPAD AIR');
@@ -89,7 +89,7 @@ describe('StringFunctions', () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Product')
                 .asQueryable().where('name').endsWith('Touch').equal(true).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             for (const item of items) {
                 expect(item.name.endsWith('Touch')).toBeTruthy();
             }
@@ -100,7 +100,7 @@ describe('StringFunctions', () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Product')
                 .asQueryable().where('name').length().equal(14).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             for (const item of items) {
                 expect(item.name.length).toEqual(14);
             }
@@ -111,7 +111,7 @@ describe('StringFunctions', () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Product')
                 .asQueryable().where('name').indexOf('Apple').greaterOrEqual(0).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             for (const item of items) {
                 expect(item.name.indexOf('Apple')).toBeGreaterThanOrEqual(0);
             }
@@ -122,7 +122,7 @@ describe('StringFunctions', () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Product')
                 .asQueryable().where('name').substr(0, 2).equal('Ap').getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             for (const item of items) {
                 expect(item.name.substr(0, 2)).toEqual('Ap');
             }
@@ -133,7 +133,7 @@ describe('StringFunctions', () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Product')
                 .asQueryable().where('name').contains('iMac').equal(true).getItems();
-            expect(items).toBeInstanceOf(Array);
+            expect(Array.isArray(items)).toBeTruthy();
             for (const item of items) {
                 expect(item.name.includes('iMac')).toBeTruthy();
             }
