@@ -171,6 +171,7 @@ describe('SqliteAdapter', () => {
                 void setTimeout(() => {
                     app.executeInTestTranscaction(async (context) => {
                         const item = await context.model('ActionStatusType').where('alternateName').equal('ActiveActionStatus').getItem();
+                        // eslint-disable-next-line jest/no-conditional-expect
                         expect(item).toBeTruthy();
                         await context.model('ActionStatusType').silent().save(item);
                         await new Promise((resolveTimeout) => {
@@ -189,6 +190,7 @@ describe('SqliteAdapter', () => {
                 void setTimeout(() => {
                     app.executeInTestTranscaction(async (context) => {
                         const item = await context.model('ActionStatusType').where('alternateName').equal('ActiveActionStatus').getItem();
+                        // eslint-disable-next-line jest/no-conditional-expect
                         expect(item).toBeTruthy();
                     }).then(() => {
                         return resolve();
