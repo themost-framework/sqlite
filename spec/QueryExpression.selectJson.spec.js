@@ -242,10 +242,8 @@ describe('SqlFormatter', () => {
             const results = await context.db.executeAsync(sql, []);
             expect(results).toBeTruthy();
             for (const result of results) {
-                if (typeof result.customer === 'string') {
-                    const customer = JSON.parse(result.customer);
-                    expect(customer).toBeTruthy();
-                }
+                const customer = JSON.parse(result.customer);
+                expect(customer).toBeTruthy();
             }
         });
     });

@@ -118,7 +118,7 @@ describe('StringFunctions', () => {
         });
     });
 
-    it('should use indexOf()', async () => {
+    it('should use substr(x,y)', async () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Product')
                 .asQueryable().where('name').substr(0, 2).equal('Ap').getItems();
