@@ -524,7 +524,6 @@ class SqliteAdapter {
                             }
                         }
                         if (forceAlter) {
-                            // eslint-disable-next-line no-unexpected-multiline
                             return (async function() {
                                 // prepare to rename existing table and create a new one
                                 const renamed = '__' + migration.appliesTo + '_' + new Date().getTime().toString() + '__';

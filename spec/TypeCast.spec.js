@@ -202,7 +202,7 @@ describe('Type Casting', () => {
         });
     });
 
-    it('should use getDate()', async () => {
+    it('should use getDate() with datetime', async () => {
         await app.executeInTestTranscaction(async (context) => {
             const query = new QueryExpression().select(new QueryField({
                 currentDate: {

@@ -1,18 +1,19 @@
 
 // MOST Web Framework Codename Zero Gravity Copyright (c) 2017-2022, THEMOST LP
 import { DataAdapterBase, DataAdapterIndexes, DataAdapterMigration, DataAdapterTable, DataAdapterView } from '@themost/common';
+import { QueryExpression } from '@themost/query';
 
 export declare class SqliteAdapter implements DataAdapterBase {
-    constructor(options: any);
+    constructor(options: { database: string, extensions?: { [key: string]: string }, retry?: number, retryInterval?: number });
     rawConnection?: any;
-    options?: any;
+    options?: { database: string, extensions?: { [key: string]: string }, retry?: number, retryInterval?: number };
     selectIdentityAsync(entity: string, attribute: string): Promise<any>;
     static formatType(field: any): string;
     open(callback: (err: Error) => void): void;
     close(callback: (err: Error) => void): void;
     openAsync(): Promise<void>;
     closeAsync(): Promise<void>;
-    prepare(query: any, values?: Array<any>): any;
+    prepare(query: string | QueryExpression, values?: Array<any>): any;
     createView(name: string, query: any, callback: (err: Error) => void): void;
     executeInTransaction(func: any, callback: (err: Error) => void): void;
     executeInTransactionAsync(func: () => Promise<any>): Promise<any>;

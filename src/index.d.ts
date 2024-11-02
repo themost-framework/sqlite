@@ -2,4 +2,4 @@
 import {SqliteAdapter} from './SqliteAdapter';
 export * from './SqliteAdapter';
 export * from './SqliteFormatter';
-export declare function createInstance(options: any): SqliteAdapter;
+export declare function createInstance(options: { database: string, extensions?: { [key: string]: string }, retry?: number, retryInterval?: number }): SqliteAdapter;

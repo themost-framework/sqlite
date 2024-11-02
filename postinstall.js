@@ -2,12 +2,12 @@ const os = require('os');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
-const { promisify } = require('util');
 const packageJson = require('./package.json');
 const unzipper = require('unzipper');
 
 function mkdirAsync(dir) {
     return new Promise((resolve, reject) => {
+        // eslint-disable-next-line no-unused-vars
         void fs.stat(dir, function (err, stats) {
             if (err && err.code !== 'ENOENT') {
                 return reject(err);
