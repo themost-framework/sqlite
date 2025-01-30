@@ -41,7 +41,9 @@ class TestApplication extends DataApplication {
     
     async finalize() {
         const service = this.getConfiguration().getStrategy(DataCacheStrategy);
+        // noinspection JSUnresolvedReference
         if (typeof service.finalize === 'function') {
+            // noinspection JSUnresolvedReference
             await service.finalize();
         }
     }
