@@ -1,4 +1,5 @@
 import { TestApplication } from './TestApplication';
+import moment from 'moment';
 
 describe('DateFunctions', () => {
     /**
@@ -36,11 +37,13 @@ describe('DateFunctions', () => {
     it('should use getDay()', async () => {
         await app.executeInTestTranscaction(async (context) => {
             let items = await context.model('Order')
-                .asQueryable().where('orderDate').getDay().equal(15).silent().getItems();
+                .asQueryable().where('orderDate').getDate().getDay().equal(15).silent().take(10).getItems();
             expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
-                expect(item.orderDate.getDate()).toEqual(15);
+                const orderDate = item.orderDate;
+                const dayOfMonth = parseInt(moment.utc(orderDate).format('D'), 10);
+                expect(dayOfMonth).toEqual(15);
             }
         });
     });
@@ -52,7 +55,8 @@ describe('DateFunctions', () => {
             expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
-                expect(item.orderDate.getMonth()).toEqual(3);
+                const orderMonth = parseInt(moment.utc(item.orderDate).format('M'), 10);
+                expect(orderMonth).toEqual(4);
             }
         });
     });
@@ -77,7 +81,8 @@ describe('DateFunctions', () => {
             expect(Array.isArray(items)).toBeTruthy();
             expect(items.length).toBeGreaterThan(0);
             for (const item of items) {
-                expect(item.orderDate.getHours()).toEqual(14);
+                const hour = parseInt(moment.utc(item.orderDate).format('H'), 10);
+                expect(hour).toEqual(14);
             }
         });
     });
