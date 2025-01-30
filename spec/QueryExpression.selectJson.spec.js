@@ -1,6 +1,6 @@
 // noinspection SpellCheckingInspection
 
-import {MemberExpression, MethodCallExpression, QueryEntity, QueryExpression} from '@themost/query';
+import {MemberExpression, MethodCallExpression, QueryEntity, QueryExpression, QueryField} from '@themost/query';
 import { SqliteFormatter } from '../src';
 import SimpleOrderSchema from './config/models/SimpleOrder.json';
 import {TestApplication} from './TestApplication';
@@ -314,6 +314,33 @@ describe('SqlFormatter', () => {
             for (const result of results) {
                 expect(result).toBeTruthy();
                 expect(result.customer).toEqual('Eric Thomas');
+            }
+        });
+    });
+
+    it('should use jsonObject', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const Orders = context.model('Order').silent();
+            const q = Orders.select(
+                'id', 'orderedItem', 'orderDate'
+            ).where('customer/description').equal('Eric Thomas');
+            const select = q.query.$select[Orders.viewAdapter];
+            select.push({
+                customer: {
+                    $jsonObject: [
+                        'familyName',
+                        new QueryField('familyName').from('customer'),
+                        'givenName',
+                        new QueryField('givenName').from('customer'),
+                    ]
+                }
+            });
+            const items = await q.getItems();
+            expect(items).toBeTruthy();
+            for (const item of items) {
+                expect(item.customer).toBeTruthy();
+                expect(item.customer.familyName).toEqual('Thomas');
+                expect(item.customer.givenName).toEqual('Eric');
             }
         });
     });

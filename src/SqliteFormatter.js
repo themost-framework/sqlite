@@ -336,6 +336,17 @@ class SqliteFormatter extends SqlFormatter {
                 return `strftime('%F %H:%M:%f+00:00', 'now')`;
         }
     }
+
+    /**
+     * @param {...*} expr
+     */
+    // eslint-disable-next-line no-unused-vars
+    $jsonObject(expr) {
+        const args = Array.from(arguments).map((arg) => {
+            return this.escape(arg)
+        });
+        return `json_object(${args.join(',')})`;
+    }
 }
 
 export {
