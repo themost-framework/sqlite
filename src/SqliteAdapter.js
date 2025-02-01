@@ -4,7 +4,7 @@ import { sprintf } from 'sprintf-js';
 import {waterfall, eachSeries} from 'async';
 import {TraceUtils}  from '@themost/common';
 import { QueryExpression, QueryField, SqlUtils } from '@themost/query';
-import { AsyncSeriesEventEmitter } from '@themost/events';
+import { AsyncSeriesEventEmitter, before, after } from '@themost/events';
 import { SqliteFormatter } from './SqliteFormatter';
 import { SqliteExtensions } from './SqliteExtensions';
 import sqlite from 'sqlite3';
@@ -44,7 +44,7 @@ function onReceivingJsonObject(event) {
                 if (typeof key !== 'string') {
                     return false;
                 }
-                return x[key].$jsonObject != null;
+                return x[key].$jsonObject != null || x[key].$json != null;
             }).map((x) => {
                 return Object.keys(x)[0];
             });
@@ -1090,49 +1090,34 @@ class SqliteAdapter {
         };
     }
 
-    /**
-     * Executes a query against the underlying database
-     * @param query {QueryExpression|string|*}
-     * @param values {*=}
-     * @param {function(Error=,*=)} callback
-     */
-    execute(query, values, callback) {
-        const target = this;
-        const params = Array.isArray(values) ? values : [];
-        try {
-            void this.executing.emit({
-                target,
-                query,
-                params
-            }).then(() => {
-                void this.doExecute(query, values, (err, results) => {
-                    if (err) {
-                        return callback(err);
-                    }
-                    try {
-                        void this.executed.emit({
-                            target,
-                            query,
-                            params,
-                            results
-                        }).then(() => {
-                            return callback(null, results);
-                        }).catch((err) => {
-                            return callback(err);
-                        });
-                    } catch (err) {
-                        return callback(err);
-                    }
-                });
-            }).catch((err) => {
-                return callback(err);
-            })
-        } catch(err) {
+    @before(({target, args}, callback) => {
+        const [query, params] = args;
+        void target.executing.emit({
+            target,
+            query,
+            params
+        }).then(() => {
+            return callback();
+        }).catch((err) => {
             return callback(err);
-        }
-
-    }
-
+        });
+    })
+    @after(({target, args, result: results}, callback) => {
+        const [query, params] = args;
+        const event = {
+            target,
+            query,
+            params,
+            results
+        };
+        void target.executed.emit(event).then(() => {
+            return callback(null, {
+                value: results
+            });
+        }).catch((err) => {
+            return callback(err);
+        });
+    })
     /**
      * Executes a query against the underlying database
      * @private
@@ -1140,7 +1125,7 @@ class SqliteAdapter {
      * @param values {*=}
      * @param {function(Error=,*=)} callback
      */
-    doExecute(query, values, callback) {
+    execute(query, values, callback) {
         const self = this;
         /**
          * @type {string|null}

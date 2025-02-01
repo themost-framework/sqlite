@@ -341,6 +341,15 @@ class SqliteFormatter extends SqlFormatter {
      * @param {...*} expr
      */
     // eslint-disable-next-line no-unused-vars
+    $json(expr) {
+        const args = Array.from(arguments);
+        return this.$jsonObject(...args);
+    }
+
+    /**
+     * @param {...*} expr
+     */
+    // eslint-disable-next-line no-unused-vars
     $jsonObject(expr) {
         const args = Array.from(arguments).map((arg) => {
             return this.escape(arg)
