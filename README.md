@@ -60,6 +60,7 @@ const query = new QueryExpression()
     })
     .orderByDescending((x) => x.price)
     .take(10);
+const items = await db.executeAsync(query);
 ```
 
 Read more about [MOST Web Framework query language provided by @themost/query](https://github.com/themost-framework/query?#themostquery)
