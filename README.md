@@ -66,5 +66,5 @@ Read more about [MOST Web Framework query language provided by @themost/query](h
 
 Use [query playground project at codesanbox.io](https://codesandbox.io/p/devbox/query-playground-zc8fg9) to learn more about the query language specification of [@themost-framework](https://github.com/themost-framework)
 
-![codesandbox.io_query-playground-1.png](docs/img/codesandbox.io_query-playground-1.png)
+![codesandbox.io_query-playground-1.png](https://github.com/themost-framework/sqlite/raw/master/docs/img/codesandbox.io_query-playground-1.png)
 
