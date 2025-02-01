@@ -10,6 +10,9 @@ jsconfig.json
 .gitpod.yml
 .gitpod.dockerfile
 
+# docs
+docs
+
 #github
 .github
 

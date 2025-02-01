@@ -6,7 +6,6 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/themost-framework/sqlite)
 ![GitHub Release Date](https://img.shields.io/github/release-date/themost-framework/sqlite)
 [![npm](https://img.shields.io/npm/dw/@themost/sqlite)](https://www.npmjs.com/package/@themost%2Fsqlite)
-![Snyk Vulnerabilities for npm package](https://img.shields.io/snyk/vulnerabilities/npm/@themost/sqlite)
 
 ![MOST Web Framework Logo](https://github.com/themost-framework/common/raw/master/docs/img/themost_framework_v3_128.png)
 
@@ -40,16 +39,32 @@ Register SQLite adapter on app.json as follows:
     ]
 }
 
+or create a new instance of `SqliteAdapter` class for connecting to SQLite database.
 
-#### Post Installation Note:
-SQLite Data Adapter comes with a regular expression extension for SQLite (regexp.c). You have to compile this extension as follows:
+```javascript
+const { SqliteAdapter } = require('@themost/sqlite');
+const { QueryExpression } = require('@themost/query');
+const db = new SqliteAdapter({
+    database: 'db/local.db'
+});
+const query = new QueryExpression()
+    .select(({ id, name, category, model, price }) => ({
+        id,
+        name,
+        category,
+        model,
+        price,
+    })).from('ProductData')
+    .where((x) => {
+        return x.price > 500 && x.category === "Laptops";
+    })
+    .orderByDescending((x) => x.price)
+    .take(10);
+```
 
-##### Using GCC/MinGW on Windows and Linux
-gcc -shared -fPIC -Isqlite3 -o regexp.0.dylib regexp.c
+Read more about [MOST Web Framework query language provided by @themost/query](https://github.com/themost-framework/query?#themostquery)
 
-##### Using GCC on Mac OSX
-gcc -dynamiclib -fPIC -Isqlite3 -o regexp.0.dylib regexp.c
+Use [query playground project at codesanbox.io](https://codesandbox.io/p/devbox/query-playground-zc8fg9) to learn more about the query language specification of [@themost-framework](https://github.com/themost-framework)
 
-##### Microsoft Tools on Windows
-cl /Gd regexp.c /I sqlite3 /DDLL /LD /link /export:sqlite3_extension_init /out:regexp.0.dylib
+![codesandbox.io_query-playground-1.png](docs/img/codesandbox.io_query-playground-1.png)
 

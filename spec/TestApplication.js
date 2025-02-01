@@ -26,12 +26,10 @@ class TestApplication extends DataApplication {
         // add adapter type
         const name = 'SQLite Data Adapter';
         const invariantName = 'sqlite';
-        Object.assign(dataConfiguration.adapterTypes, {
-            sqlite: {
-                name,
-                invariantName,
-                createInstance
-            }
+        dataConfiguration.adapterTypes.set(invariantName, {
+            name,
+            invariantName,
+            createInstance
         });
         dataConfiguration.adapters.push({
             name: 'test',
@@ -43,7 +41,9 @@ class TestApplication extends DataApplication {
     
     async finalize() {
         const service = this.getConfiguration().getStrategy(DataCacheStrategy);
+        // noinspection JSUnresolvedReference
         if (typeof service.finalize === 'function') {
+            // noinspection JSUnresolvedReference
             await service.finalize();
         }
     }

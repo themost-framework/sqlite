@@ -1,6 +1,6 @@
 // noinspection SpellCheckingInspection
 
-import {MemberExpression, MethodCallExpression, QueryEntity, QueryExpression} from '@themost/query';
+import {MemberExpression, MethodCallExpression, QueryEntity, QueryExpression, QueryField} from '@themost/query';
 import { SqliteFormatter } from '../src';
 import SimpleOrderSchema from './config/models/SimpleOrder.json';
 import {TestApplication} from './TestApplication';
@@ -315,6 +315,89 @@ describe('SqlFormatter', () => {
                 expect(result).toBeTruthy();
                 expect(result.customer).toEqual('Eric Thomas');
             }
+        });
+    });
+
+    it('should use jsonObject', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const Orders = context.model('Order').silent();
+            const q = Orders.select(
+                'id', 'orderedItem', 'orderDate'
+            ).where('customer/description').equal('Eric Thomas');
+            const select = q.query.$select[Orders.viewAdapter];
+            select.push({
+                customer: {
+                    $jsonObject: [
+                        'familyName',
+                        new QueryField('familyName').from('customer'),
+                        'givenName',
+                        new QueryField('givenName').from('customer'),
+                    ]
+                }
+            });
+            const items = await q.getItems();
+            expect(items).toBeTruthy();
+            for (const item of items) {
+                expect(item.customer).toBeTruthy();
+                expect(item.customer.familyName).toEqual('Thomas');
+                expect(item.customer.givenName).toEqual('Eric');
+            }
+        });
+    });
+
+    it('should use jsonObject in ad-hoc queries', async () => {
+        await app.executeInTestTranscaction(async (context) => {
+            const {viewAdapter: Orders} = context.model('Order');
+            const {viewAdapter: Customers} = context.model('Person');
+            const {viewAdapter: OrderStatusTypes} = context.model('OrderStatusType');
+            const q = new QueryExpression().select(
+                'id', 'orderedItem', 'orderStatus', 'orderDate'
+            ).from(Orders).join(new QueryEntity(Customers).as('customers')).with(
+                new QueryExpression().where(
+                    new QueryField('customer').from(Orders)
+                ).equal(
+                    new QueryField('id').from('customers')
+                )
+            ).join(new QueryEntity(OrderStatusTypes).as('orderStatusTypes')).with(
+                new QueryExpression().where(
+                    new QueryField('orderStatus').from(Orders)
+                ).equal(
+                    new QueryField('id').from('orderStatusTypes')
+                )
+            ).where(new QueryField('description').from('customers')).equal('Eric Thomas');
+            const select = q.$select[Orders];
+            select.push({
+                customer: {
+                    $jsonObject: [
+                        'familyName',
+                        new QueryField('familyName').from('customers'),
+                        'givenName',
+                        new QueryField('givenName').from('customers'),
+                    ]
+                }
+            }, {
+                orderStatus: {
+                    $jsonObject: [
+                        'name',
+                        new QueryField('name').from('orderStatusTypes'),
+                        'alternateName',
+                        new QueryField('alternateName').from('orderStatusTypes'),
+                    ]
+                }
+            });
+            /**
+             * @type {Array<{id: number, orderedItem: number, orderDate: Date, orderStatus: { name: string, alternateName: string }, customer: {familyName: string, givenName: string}}>}
+             */
+            const items = await context.db.executeAsync(q, []);
+            expect(items).toBeTruthy();
+            for (const item of items) {
+                expect(item.customer).toBeTruthy();
+                expect(item.customer.familyName).toEqual('Thomas');
+                expect(item.customer.givenName).toEqual('Eric');
+                expect(item.orderStatus).toBeTruthy();
+                expect(item.orderStatus.name).toBeTruthy();
+            }
+
         });
     });
 

@@ -4,6 +4,7 @@ import { sprintf } from 'sprintf-js';
 import {waterfall, eachSeries} from 'async';
 import {TraceUtils}  from '@themost/common';
 import { QueryExpression, QueryField, SqlUtils } from '@themost/query';
+import { AsyncSeriesEventEmitter, before, after } from '@themost/events';
 import { SqliteFormatter } from './SqliteFormatter';
 import { SqliteExtensions } from './SqliteExtensions';
 import sqlite from 'sqlite3';
@@ -24,6 +25,43 @@ const SQLITE_OPEN_SHAREDCACHE = 0x00020000;  /* Ok for sqlite3_open_v2() */
 // noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_PRIVATECACHE = 0x00040000;  /* Ok for sqlite3_open_v2() */
 /* eslint-enable no-unused-vars */
+
+/**
+ *
+ * @param {{target: SqliteAdapter, query: string|QueryExpression, results: Array<*>}} event
+ */
+function onReceivingJsonObject(event) {
+    if (typeof event.query === 'object' && event.query.$select) {
+        // try to identify the usage of a $jsonObject dialect and format result as JSON
+        const { $select: select } = event.query;
+        if (select) {
+            const attrs = Object.keys(select).reduce((previous, current) => {
+                const fields = select[current];
+                previous.push(...fields);
+                return previous;
+            }, []).filter((x) => {
+                const [key] = Object.keys(x);
+                if (typeof key !== 'string') {
+                    return false;
+                }
+                return x[key].$jsonObject != null || x[key].$json != null;
+            }).map((x) => {
+                return Object.keys(x)[0];
+            });
+            if (attrs.length > 0) {
+                if (Array.isArray(event.results)) {
+                    for(const result of event.results) {
+                        attrs.forEach((attr) => {
+                            if (Object.prototype.hasOwnProperty.call(result, attr) && typeof result[attr] === 'string') {
+                                    result[attr] = JSON.parse(result[attr]);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+    }
+}
 
 
 class SqliteAdapter {
@@ -46,6 +84,11 @@ class SqliteAdapter {
          */
         this.rawConnection = null;
         this.extensions = Object.assign({}, SqliteExtensions, this.options.extensions);
+        this.executing = new AsyncSeriesEventEmitter();
+        this.executed = new AsyncSeriesEventEmitter();
+
+        this.executed.subscribe(onReceivingJsonObject);
+
     }
     open(callback) {
         const self = this;
@@ -1046,8 +1089,38 @@ class SqliteAdapter {
             }
         };
     }
+
+    @before(({target, args}, callback) => {
+        const [query, params] = args;
+        void target.executing.emit({
+            target,
+            query,
+            params
+        }).then(() => {
+            return callback();
+        }).catch((err) => {
+            return callback(err);
+        });
+    })
+    @after(({target, args, result: results}, callback) => {
+        const [query, params] = args;
+        const event = {
+            target,
+            query,
+            params,
+            results
+        };
+        void target.executed.emit(event).then(() => {
+            return callback(null, {
+                value: results
+            });
+        }).catch((err) => {
+            return callback(err);
+        });
+    })
     /**
      * Executes a query against the underlying database
+     * @private
      * @param query {QueryExpression|string|*}
      * @param values {*=}
      * @param {function(Error=,*=)} callback
