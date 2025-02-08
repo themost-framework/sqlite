@@ -2,6 +2,7 @@
 
 import { sprintf } from 'sprintf-js';
 import { SqlFormatter, QueryField } from '@themost/query';
+import { isObjectDeep } from './isObjectDeep';
 const REGEXP_SINGLE_QUOTE=/\\'/g;
 const SINGLE_QUOTE_ESCAPE ='\'\'';
 const REGEXP_DOUBLE_QUOTE=/\\"/g;
@@ -51,6 +52,19 @@ class SqliteFormatter extends SqlFormatter {
         }
         if (value instanceof Date) {
             return this.escapeDate(value);
+        }
+        // serialize array of objects as json array
+        if (Array.isArray(value)) {
+            // find first non-object value
+            const index = value.filter((x) => {
+                return x != null;
+            }).findIndex((x) => {
+                return isObjectDeep(x) === false;
+            });
+            // if all values are objects
+            if (index === -1) {
+                return this.escape(JSON.stringify(value)); // return as json array
+            }
         }
         let res = super.escape.bind(this)(value, unquoted);
         if (typeof value === 'string') {
