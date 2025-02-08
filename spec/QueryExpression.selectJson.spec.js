@@ -650,4 +650,50 @@ describe('SqlFormatter', () => {
         }
     });
 
+    it('should parse string as json array', async () => {
+        // set context user
+        context.user = {
+            name: 'alexis.rees@example.com'
+          };
+        const { viewAdapter: People  } = context.model('Person');
+        const query = new QueryExpression().select(
+            'id', 'familyName', 'givenName', 'jobTitle', 'email',
+            new QueryField({
+                tags: {
+                    $jsonArray: [
+                        new QueryField({
+                            $value: '[ "user", "customer", "admin" ]'
+                        })
+                    ]
+                }
+            })
+        ).from(People).where('email').equal(context.user.name);
+        const [item] = await context.db.executeAsync(query);
+        expect(item).toBeTruthy();
+    });
+
+    it('should parse array as json array', async () => {
+        // set context user
+        context.user = {
+            name: 'alexis.rees@example.com'
+          };
+        const { viewAdapter: People  } = context.model('Person');
+        const query = new QueryExpression().select(
+            'id', 'familyName', 'givenName', 'jobTitle', 'email',
+            new QueryField({
+                tags: {
+                    $jsonArray: [
+                        {
+                            $value: [ 'user', 'customer', 'admin' ]
+                        }
+                    ]
+                }
+            })
+        ).from(People).where('email').equal(context.user.name);
+        const [item] = await context.db.executeAsync(query);
+        expect(item).toBeTruthy();
+        expect(Array.isArray(item.tags)).toBeTruthy();
+        expect(item.tags).toEqual([ 'user', 'customer', 'admin' ]);
+    });
+
 });

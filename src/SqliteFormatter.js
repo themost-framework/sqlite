@@ -384,26 +384,46 @@ class SqliteFormatter extends SqlFormatter {
         if (expr == null) {
             throw new Error('The given query expression cannot be null');
         }
-        if (expr.$select == null) {
-            throw new Error('The given query expression must an instance of select query');
+        if (expr instanceof QueryField) {
+            // escape expr as field and waiting for parsing results as json array
+            return this.escape(expr);
         }
-        // get select fields
-        const args = Object.keys(expr.$select).reduce((previous, key) => {
-            previous.push.apply(previous, expr.$select[key]);
-            return previous;
-        }, []);
-        const [key] = Object.keys(expr.$select);
-        // prepare select expression to return json array   
-        expr.$select[key] = [
-            {
-                $jsonGroupArray: [ // use json_group_array function
-                    {
-                        $jsonObject: args // use json_object function
-                    }
-                ]
+        if (Object.prototype.hasOwnProperty.call(expr, '$name')) {
+            return this.escape(expr);
+        }
+        if (Object.prototype.hasOwnProperty.call(expr, '$value')) {
+            if (Array.isArray(expr.$value)) {
+                return this.escape(JSON.stringify(expr.$value));
             }
-        ];
-        return `(${this.format(expr)})`;
+            return this.escape(expr);
+        }
+        if (Object.prototype.hasOwnProperty.call(expr, '$literal')) {
+            if (Array.isArray(expr.$literal)) {
+                return this.escape(JSON.stringify(expr.$literal));
+            }
+            return this.escape(expr);
+        }
+        // trear expr as select expression
+        if (expr.$select) {
+            // get select fields
+            const args = Object.keys(expr.$select).reduce((previous, key) => {
+                previous.push.apply(previous, expr.$select[key]);
+                return previous;
+            }, []);
+            const [key] = Object.keys(expr.$select);
+            // prepare select expression to return json array   
+            expr.$select[key] = [
+                {
+                    $jsonGroupArray: [ // use json_group_array function
+                        {
+                            $jsonObject: args // use json_object function
+                        }
+                    ]
+                }
+            ];
+            return `(${this.format(expr)})`;
+        }
+        throw new Error('Invalid json array expression. Expected a valid select expression');
     }
 }
 
