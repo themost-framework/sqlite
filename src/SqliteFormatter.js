@@ -388,21 +388,6 @@ class SqliteFormatter extends SqlFormatter {
             // escape expr as field and waiting for parsing results as json array
             return this.escape(expr);
         }
-        if (Object.prototype.hasOwnProperty.call(expr, '$name')) {
-            return this.escape(expr);
-        }
-        if (Object.prototype.hasOwnProperty.call(expr, '$value')) {
-            if (Array.isArray(expr.$value)) {
-                return this.escape(JSON.stringify(expr.$value));
-            }
-            return this.escape(expr);
-        }
-        if (Object.prototype.hasOwnProperty.call(expr, '$literal')) {
-            if (Array.isArray(expr.$literal)) {
-                return this.escape(JSON.stringify(expr.$literal));
-            }
-            return this.escape(expr);
-        }
         // trear expr as select expression
         if (expr.$select) {
             // get select fields
@@ -422,6 +407,23 @@ class SqliteFormatter extends SqlFormatter {
                 }
             ];
             return `(${this.format(expr)})`;
+        }
+        // treat expression as query field
+        if (Object.prototype.hasOwnProperty.call(expr, '$name')) {
+            return this.escape(expr);
+        }
+        // treat expression as value
+        if (Object.prototype.hasOwnProperty.call(expr, '$value')) {
+            if (Array.isArray(expr.$value)) {
+                return this.escape(JSON.stringify(expr.$value));
+            }
+            return this.escape(expr);
+        }
+        if (Object.prototype.hasOwnProperty.call(expr, '$literal')) {
+            if (Array.isArray(expr.$literal)) {
+                return this.escape(JSON.stringify(expr.$literal));
+            }
+            return this.escape(expr);
         }
         throw new Error('Invalid json array expression. Expected a valid select expression');
     }
