@@ -601,4 +601,53 @@ describe('SqlFormatter', () => {
         }
     });
 
+
+    it('should return json arrays', async () => {
+        // set context user
+        context.user = {
+            name: 'alexis.rees@example.com'
+          };
+        
+        const queryPeople = context.model('Person').asQueryable().select(
+            'id', 'familyName', 'givenName', 'jobTitle', 'email'
+        ).flatten();
+        await beforeExecuteAsync({
+            model: queryPeople.model,
+            emitter: queryPeople,
+            query: queryPeople.query,
+        });
+        const { viewAdapter: People  } = queryPeople.model;
+        const queryOrders = context.model('Order').asQueryable().select(
+            'id', 'orderDate', 'orderStatus', 'orderedItem', 'customer'
+        ).flatten();
+        const { viewAdapter: Orders  } = queryOrders.model;
+        // prepare query for each customer
+        queryOrders.query.where(
+            new QueryField('customer').from(Orders)
+        ).equal(
+            new QueryField('id').from(People)
+        );
+        const selectPeople = queryPeople.query.$select[People];
+        // add orders as json array
+        selectPeople.push({
+            orders: {
+                $jsonArray: [
+                    queryOrders.query
+                ]
+            }
+        });
+        const start= new Date().getTime();
+        const items = await queryPeople.take(50).getItems();
+        const end = new Date().getTime();
+        TraceUtils.log('Elapsed time: ' + (end-start) + 'ms');
+        expect(items.length).toBeTruthy();
+        for (const item of items) {
+            expect(Array.isArray(item.orders)).toBeTruthy();
+            for (const order of item.orders) {
+                expect(order.customer).toEqual(item.id);
+            }
+
+        }
+    });
+
 });

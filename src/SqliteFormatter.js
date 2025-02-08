@@ -279,7 +279,7 @@ class SqliteFormatter extends SqlFormatter {
      * @param {*} expr
      * @return {string}
      */
-    $jsonArray(expr) {
+    $jsonEach(expr) {
         return `json_each(${this.escapeName(expr)})`;
     }
 
@@ -364,6 +364,46 @@ class SqliteFormatter extends SqlFormatter {
             return previous;
         }, []);
         return `json_object(${args.join(',')})`;;
+    }
+
+    /**
+     * @param {{ $jsonGet: Array<*> }} expr
+     */
+    $jsonGroupArray(expr) {
+        const [key] = Object.keys(expr);
+        if (key !== '$jsonObject') {
+            throw new Error('Invalid json group array expression. Expected a json object expression');
+        }
+        return `json_group_array(${this.escape(expr)})`;
+    }
+
+    /**
+     * @param {import('@themost/query').QueryExpression} expr
+     */
+    $jsonArray(expr) {
+        if (expr == null) {
+            throw new Error('The given query expression cannot be null');
+        }
+        if (expr.$select == null) {
+            throw new Error('The given query expression must an instance of select query');
+        }
+        // get select fields
+        const args = Object.keys(expr.$select).reduce((previous, key) => {
+            previous.push.apply(previous, expr.$select[key]);
+            return previous;
+        }, []);
+        const [key] = Object.keys(expr.$select);
+        // prepare select expression to return json array   
+        expr.$select[key] = [
+            {
+                $jsonGroupArray: [ // use json_group_array function
+                    {
+                        $jsonObject: args // use json_object function
+                    }
+                ]
+            }
+        ];
+        return `(${this.format(expr)})`;
     }
 }
 
