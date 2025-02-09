@@ -2,6 +2,7 @@
 
 import { sprintf } from 'sprintf-js';
 import { SqlFormatter, QueryField } from '@themost/query';
+import { isObjectDeep } from './isObjectDeep';
 const REGEXP_SINGLE_QUOTE=/\\'/g;
 const SINGLE_QUOTE_ESCAPE ='\'\'';
 const REGEXP_DOUBLE_QUOTE=/\\"/g;
@@ -51,6 +52,19 @@ class SqliteFormatter extends SqlFormatter {
         }
         if (value instanceof Date) {
             return this.escapeDate(value);
+        }
+        // serialize array of objects as json array
+        if (Array.isArray(value)) {
+            // find first non-object value
+            const index = value.filter((x) => {
+                return x != null;
+            }).findIndex((x) => {
+                return isObjectDeep(x) === false;
+            });
+            // if all values are objects
+            if (index === -1) {
+                return this.escape(JSON.stringify(value)); // return as json array
+            }
         }
         let res = super.escape.bind(this)(value, unquoted);
         if (typeof value === 'string') {
@@ -279,7 +293,7 @@ class SqliteFormatter extends SqlFormatter {
      * @param {*} expr
      * @return {string}
      */
-    $jsonArray(expr) {
+    $jsonEach(expr) {
         return `json_each(${this.escapeName(expr)})`;
     }
 
@@ -364,6 +378,68 @@ class SqliteFormatter extends SqlFormatter {
             return previous;
         }, []);
         return `json_object(${args.join(',')})`;;
+    }
+
+    /**
+     * @param {{ $jsonGet: Array<*> }} expr
+     */
+    $jsonGroupArray(expr) {
+        const [key] = Object.keys(expr);
+        if (key !== '$jsonObject') {
+            throw new Error('Invalid json group array expression. Expected a json object expression');
+        }
+        return `json_group_array(${this.escape(expr)})`;
+    }
+
+    /**
+     * @param {import('@themost/query').QueryExpression} expr
+     */
+    $jsonArray(expr) {
+        if (expr == null) {
+            throw new Error('The given query expression cannot be null');
+        }
+        if (expr instanceof QueryField) {
+            // escape expr as field and waiting for parsing results as json array
+            return this.escape(expr);
+        }
+        // trear expr as select expression
+        if (expr.$select) {
+            // get select fields
+            const args = Object.keys(expr.$select).reduce((previous, key) => {
+                previous.push.apply(previous, expr.$select[key]);
+                return previous;
+            }, []);
+            const [key] = Object.keys(expr.$select);
+            // prepare select expression to return json array   
+            expr.$select[key] = [
+                {
+                    $jsonGroupArray: [ // use json_group_array function
+                        {
+                            $jsonObject: args // use json_object function
+                        }
+                    ]
+                }
+            ];
+            return `(${this.format(expr)})`;
+        }
+        // treat expression as query field
+        if (Object.prototype.hasOwnProperty.call(expr, '$name')) {
+            return this.escape(expr);
+        }
+        // treat expression as value
+        if (Object.prototype.hasOwnProperty.call(expr, '$value')) {
+            if (Array.isArray(expr.$value)) {
+                return this.escape(JSON.stringify(expr.$value));
+            }
+            return this.escape(expr);
+        }
+        if (Object.prototype.hasOwnProperty.call(expr, '$literal')) {
+            if (Array.isArray(expr.$literal)) {
+                return this.escape(JSON.stringify(expr.$literal));
+            }
+            return this.escape(expr);
+        }
+        throw new Error('Invalid json array expression. Expected a valid select expression');
     }
 }
 
