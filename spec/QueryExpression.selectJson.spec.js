@@ -712,5 +712,4 @@ describe('SqlFormatter', () => {
         expect(Array.isArray(item.tags)).toBeTruthy();
         expect(item.tags).toEqual([ 'user', 'customer', 'admin' ]);
     });
-
 });
