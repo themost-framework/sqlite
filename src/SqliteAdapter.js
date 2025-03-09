@@ -570,7 +570,7 @@ class SqliteAdapter {
                             return (async function() {
                                 // prepare to rename existing table and create a new one
                                 const renamed = '__' + migration.appliesTo + '_' + new Date().getTime().toString() + '__';
-                                const formatter = new SqliteFormatter();
+                                const formatter = self.getFormatter();
                                 const renameTable = formatter.escapeName(renamed);
                                 const table = formatter.escapeName(migration.appliesTo);
                                 const existingFields = await self.table(migration.appliesTo).columnsAsync();
@@ -613,7 +613,7 @@ class SqliteAdapter {
                             });
                         }
                         else {
-                            const formatter = new SqliteFormatter();
+                            const formatter = self.getFormatter();
                             migration.add.forEach(function (x) {
                                 //search for columns
                                 expressions.push(sprintf('ALTER TABLE %s ADD COLUMN %s %s', formatter.escapeName(migration.appliesTo), formatter.escapeName(x.name), self.formatType(x)));
@@ -956,8 +956,8 @@ class SqliteAdapter {
                     return callback();
                 }
                 // generate SQL statement
-                const formatter = new SqliteFormatter();
-                const escapedTable = new SqliteFormatter().escapeName(name);
+                const formatter = self.getFormatter();
+                const escapedTable = formatter.escapeName(name);
                 const sql = fields.map((field) => {
                     const escapedField = formatter.escapeName(field.name);
                     return sprintf('ALTER TABLE %s ADD COLUMN %s %s', escapedTable, escapedField, self.formatType(field));
@@ -1065,7 +1065,7 @@ class SqliteAdapter {
                         }
                         try {
                             let sql = sprintf('CREATE VIEW `%s` AS ', name);
-                            const formatter = new SqliteFormatter();
+                            const formatter = self.getFormatter();
                             sql += formatter.format(q);
                             self.execute(sql, undefined, tr);
                         }
@@ -1138,7 +1138,7 @@ class SqliteAdapter {
             }
             else {
                 //format query expression or any object that may act as query expression
-                const formatter = new SqliteFormatter();
+                const formatter = this.getFormatter();
                 sql = formatter.format(query);
             }
             //validate sql statement
@@ -1305,7 +1305,7 @@ class SqliteAdapter {
     }
 
     indexes(table) {
-        const self = this, formatter = new SqliteFormatter();
+        const self = this, formatter = this.getFormatter();
         return {
             list: function (callback) {
                 const this1 = this;
@@ -1432,7 +1432,7 @@ class SqliteAdapter {
                     if (!exists) {
                         return callback();
                     }
-                    const formatter = new SqliteFormatter();
+                    const formatter = self.getFormatter();
                     self.execute(sprintf('DROP INDEX %s', formatter.escapeName(name)), [], callback);
                 });
             },
@@ -1447,6 +1447,10 @@ class SqliteAdapter {
                 });
             }
         };
+    }
+
+    getFormatter() {
+        return new SqliteFormatter();
     }
 }
 
