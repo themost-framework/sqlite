@@ -1,7 +1,7 @@
 
 // MOST Web Framework Codename Zero Gravity Copyright (c) 2017-2022, THEMOST LP
 import { DataAdapterBase, DataAdapterIndexes, DataAdapterMigration, DataAdapterTable, DataAdapterView } from '@themost/common';
-import { QueryExpression } from '@themost/query';
+import { QueryExpression, SqlFormatter } from '@themost/query';
 import {AsyncSeriesEventEmitter} from '@themost/events';
 
 export declare class SqliteAdapter implements DataAdapterBase {
@@ -32,4 +32,5 @@ export declare class SqliteAdapter implements DataAdapterBase {
     table(table: string): DataAdapterTable;
     view(view: string): DataAdapterView;
     indexes(table: string): DataAdapterIndexes;
+    getFormatter(): SqlFormatter;
 }
