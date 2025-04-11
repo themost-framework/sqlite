@@ -104,13 +104,17 @@ class SqliteAdapter {
 
         this.executed.subscribe(onReceivingJsonObject);
         /**
+         * create a new instance of logger
          * @type {import('@themost/common').TraceLogger}
          */
         this.logger = createLogger();
-        // stage 2: use log level from connection options, if any
+        // use log level from connection options, if any
         if (typeof this.options.logLevel === 'string' && this.options.logLevel.length) {
+            // if the logger has level(string) function
             if (typeof this.logger.level === 'function') {
+                // try to set log level
                 this.logger.level(this.options.logLevel);
+            // otherwise, check if logger has setLogLevel(string) function
             } else if (typeof this.logger.setLogLevel === 'function') {
                 this.logger.setLogLevel(this.options.logLevel);
             }
