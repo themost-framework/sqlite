@@ -63,6 +63,21 @@ function onReceivingJsonObject(event) {
     }
 }
 
+/**
+ * 
+ * @returns {import('@themost/common').TraceLogger}
+ */
+function createLogger() {
+    if (typeof TraceUtils.newLogger === 'function') {
+        return TraceUtils.newLogger();
+    }
+    const [loggerProperty] = Object.getOwnPropertySymbols(TraceUtils);
+    const logger = TraceUtils[loggerProperty];
+    const newLogger = Object.create(TraceUtils[loggerProperty]);
+    newLogger.options = Object.assign({}, logger.options);
+    return newLogger;
+}
+
 
 class SqliteAdapter {
     /**
@@ -70,7 +85,7 @@ class SqliteAdapter {
      */
     constructor(options) {
         /**
-         * @type {{database: string,retry: number=,retryInterval: number=}}
+         * @type {{database: string,retry: number=,retryInterval: number=,logLevel:string=}}
          */
         this.options = options || { database: ':memory:' };
         // set defaults
@@ -88,7 +103,18 @@ class SqliteAdapter {
         this.executed = new AsyncSeriesEventEmitter();
 
         this.executed.subscribe(onReceivingJsonObject);
-
+        /**
+         * @type {import('@themost/common').TraceLogger}
+         */
+        this.logger = createLogger();
+        // stage 2: use log level from connection options, if any
+        if (typeof this.options.logLevel === 'string' && this.options.logLevel.length) {
+            if (typeof this.logger.level === 'function') {
+                this.logger.level(this.options.logLevel);
+            } else if (typeof this.logger.setLogLevel === 'function') {
+                this.logger.setLogLevel(this.options.logLevel);
+            }
+        }
     }
     open(callback) {
         const self = this;
@@ -147,8 +173,8 @@ class SqliteAdapter {
             }
         }
         catch (err) {
-            TraceUtils.log('An error occurred while closing database.');
-            TraceUtils.log(err);
+            this.logger.warn('An error occurred while closing database.');
+            this.logger.warn(err);
             //call callback without error
             callback();
         }
@@ -1153,8 +1179,7 @@ class SqliteAdapter {
                 }
                 else {
                     //log statement (optional)
-                    if (process.env.NODE_ENV === 'development')
-                        TraceUtils.log(sprintf('SQL:%s, Parameters:%s', sql, JSON.stringify(values)));
+                    self.logger.debug(`SQL:${sql}, Parameters:${JSON.stringify(values)}`);
                     //prepare statement - the traditional way
                     const prepared = self.prepare(sql, values);
                     let fn;
@@ -1173,7 +1198,7 @@ class SqliteAdapter {
                             if (err.code === 'SQLITE_BUSY') {
                                 const shouldRetry = typeof self.options.retry === 'number' && self.options.retry > 0;
                                 if (shouldRetry === false) {
-                                    TraceUtils.error(`SQL Error: ${prepared}`);
+                                    self.logger.error(`SQL Error: ${prepared}`);
                                     return callback(err);
                                 }
                                 const retry = self.options.retry;
@@ -1196,7 +1221,7 @@ class SqliteAdapter {
                                 }
                                 // retry
                                 callback.retry += retryInterval;
-                                TraceUtils.warn(`'SQL Error:${prepared}. Retrying in ${callback.retry} ms.'`);
+                                self.logger.warn(`'SQL Error:${prepared}. Retrying in ${callback.retry} ms.'`);
                                 return setTimeout(function () {
                                     self.execute(query, values, callback);
                                 }, callback.retry);
@@ -1205,7 +1230,7 @@ class SqliteAdapter {
                             if (Object.prototype.hasOwnProperty.call(callback, 'retry')) {
                                 delete callback.retry;
                             }
-                            TraceUtils.error(`SQL Error: ${prepared}`);
+                            self.logger.error(`SQL Error: ${prepared}`);
                             callback(err);
                         }
                         else {

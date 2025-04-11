@@ -3,7 +3,8 @@ import {DataApplication, DataConfigurationStrategy, DataCacheStrategy, DataConte
 import { createInstance } from '../src';
 
 const testConnectionOptions = {
-    'database': 'spec/db/local.db'
+    'database': 'spec/db/local.db',
+    'logLevel': 'debug'
 };
 
 
