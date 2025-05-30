@@ -1120,6 +1120,70 @@ class SqliteAdapter {
         };
     }
 
+    /**
+     * 
+     * @returns {import('./SqliteAdapter').DataAdapterTables}
+     */
+    tables() {
+        const self = this;
+        return {
+            /**
+             * @param {function} callback
+             * @returns void
+             */
+            list: function(callback) {
+                void self.execute('SELECT name FROM sqlite_master WHERE type=\'table\'', null, (err, results) => {
+                    if (err) {
+                        return callback(err);
+                    }
+                    return callback(null, results);
+                });
+            },
+            listAsync: function() {
+                return new Promise((resolve, reject) => {
+                    this.list((err, value) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        return resolve(value);
+                    });
+                });
+            }
+        }
+    }
+
+    /**
+     * 
+     * @returns {import('./SqliteAdapter').DataAdapterViews}
+     */
+    views() {
+        const self = this;
+        return {
+            /**
+             * @param {function} callback
+             * @returns void
+             */
+            list: function(callback) {
+                void self.execute('SELECT name FROM sqlite_master WHERE type=\'view\'', null, (err, results) => {
+                    if (err) {
+                        return callback(err);
+                    }
+                    return callback(null, results);
+                });
+            },
+            listAsync: function() {
+                return new Promise((resolve, reject) => {
+                    this.list((err, value) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        return resolve(value);
+                    });
+                });
+            }
+        }
+    }
+
     @before(({target, args}, callback) => {
         const [query, params] = args;
         void target.executing.emit({

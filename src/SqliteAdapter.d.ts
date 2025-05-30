@@ -4,6 +4,16 @@ import { DataAdapterBase, DataAdapterIndexes, DataAdapterMigration, DataAdapterT
 import { QueryExpression, SqlFormatter } from '@themost/query';
 import {AsyncSeriesEventEmitter} from '@themost/events';
 
+export declare interface DataAdapterTables {
+    list(callback: (err: Error, result: { name: string }[]) => void): void;
+    listAsync(): Promise<{ name: string }[]>;
+}
+
+export declare interface DataAdapterViews {
+    list(callback: (err: Error, result: { name: string }[]) => void): void;
+    listAsync(): Promise<{ name: string }[]>;
+}
+
 export declare class SqliteAdapter implements DataAdapterBase {
     executing: AsyncSeriesEventEmitter<{target: SqliteAdapter, query: (string|QueryExpression), params?: unknown[]}>;
     executed: AsyncSeriesEventEmitter<{target: SqliteAdapter, query: (string|QueryExpression), params?: unknown[], results: uknown[]}>;
@@ -32,7 +42,9 @@ export declare class SqliteAdapter implements DataAdapterBase {
     lastIdentity(callback: (err: Error, value: any) => void): void;
     lastIdentityAsync(): Promise<any>;
     table(table: string): DataAdapterTable;
+    tables(): DataAdapterTables;
     view(view: string): DataAdapterView;
+    views(): DataAdapterViews;
     indexes(table: string): DataAdapterIndexes;
     getFormatter(): SqlFormatter;
 }
