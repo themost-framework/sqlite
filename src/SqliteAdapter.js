@@ -55,7 +55,9 @@ const SqlDateRegEx = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d+\+[0-1][0-9]:[0-
 /* eslint-disable no-unused-vars */
 // noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_READONLY = 0x00000001;  /* Ok for sqlite3_open_v2() */
+// noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_READWRITE = 0x00000002;  /* Ok for sqlite3_open_v2() */
+// noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_CREATE = 0x00000004;  /* Ok for sqlite3_open_v2() */
 // noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_NOMUTEX = 0x00008000; /* Ok for sqlite3_open_v2() */
@@ -126,7 +128,7 @@ class SqliteAdapter {
      */
     constructor(options) {
         /**
-         * @type {{database: string,retry: number=,retryInterval: number=,logLevel:string=}}
+         * @type {{database: string,retry: number=,retryInterval: number=,logLevel:string=,extensions: Object=}}
          */
         this.options = options || { database: ':memory:' };
         // set defaults
