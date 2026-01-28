@@ -1,5 +1,5 @@
 import { QueryExpression } from '@themost/query';
-import { SqliteFormatter } from '../src/SqliteFormatter';
+import { SqliteFormatter } from '@themost/sqlite';
 import { TestApplication } from './TestApplication';
 
 describe('SqliteAdapter', () => {
