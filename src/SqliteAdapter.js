@@ -7,14 +7,57 @@ import { QueryExpression, QueryField, SqlUtils } from '@themost/query';
 import { AsyncSeriesEventEmitter, before, after } from '@themost/events';
 import { SqliteFormatter } from './SqliteFormatter';
 import { SqliteExtensions } from './SqliteExtensions';
-import sqlite from 'sqlite3';
-const sqlite3 = sqlite.verbose();
+import Database from 'better-sqlite3';
+
+if (typeof Database.prototype.run !== 'function') {
+    Object.assign(Database.prototype, {
+        /**
+         * Executes a prepared statement with the given parameters and invokes the callback when execution is complete
+         * @this {Database}
+         * @param {string} sql
+         * @param {Array} params
+         * @param {Function} callback
+         * @returns {*}
+         */
+        run: function (sql, params, callback) {
+            try {
+                // noinspection JSUnresolvedReference
+                const stmt = this.prepare(sql);
+                const info = params ? stmt.run(...params) : stmt.run();
+                return callback(null, info);
+            } catch (err) {
+                return callback(err);
+            }
+        },
+        /**
+         * Executes a prepared statement with the given parameters and invokes the callback with the results
+         * @this {Database}
+         * @param {string} sql
+         * @param {Array} params
+         * @param {Function} callback
+         * @returns {*}
+         */
+        all: function (sql, params, callback) {
+            try {
+                // noinspection JSUnresolvedReference
+                const stmt = this.prepare(sql);
+                const results = stmt.all(...params);
+                return callback(null, results);
+            } catch (err) {
+                return callback(err);
+            }
+        }
+    });
+}
+
 const SqlDateRegEx = /^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\.\d+\+[0-1][0-9]:[0-5][0-9]$/;
 
 /* eslint-disable no-unused-vars */
 // noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_READONLY = 0x00000001;  /* Ok for sqlite3_open_v2() */
+// noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_READWRITE = 0x00000002;  /* Ok for sqlite3_open_v2() */
+// noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_CREATE = 0x00000004;  /* Ok for sqlite3_open_v2() */
 // noinspection JSUnusedLocalSymbols
 const SQLITE_OPEN_NOMUTEX = 0x00008000; /* Ok for sqlite3_open_v2() */
@@ -85,7 +128,7 @@ class SqliteAdapter {
      */
     constructor(options) {
         /**
-         * @type {{database: string,retry: number=,retryInterval: number=,logLevel:string=}}
+         * @type {{database: string,retry: number=,retryInterval: number=,logLevel:string=,extensions: Object=}}
          */
         this.options = options || { database: ':memory:' };
         // set defaults
@@ -126,22 +169,16 @@ class SqliteAdapter {
         if (self.rawConnection) {
             return callback();
         }
+        self.rawConnection = new Database(self.options.database);
         //try to open or create database
-        self.rawConnection = new sqlite3.Database(self.options.database, 6, function (err) {
-            if (err) {
-                self.rawConnection = null;
-                return callback(err);
+        void eachSeries(Object.keys(self.extensions), function (key, cb) {
+            if (Object.prototype.hasOwnProperty.call(self.extensions, key)) {
+                const extensionPath = self.extensions[key];
+                void self.rawConnection.loadExtension(extensionPath);
+                return cb();
             }
-            void eachSeries(Object.keys(self.extensions), function (key, cb) {
-                if (Object.prototype.hasOwnProperty.call(self.extensions, key)) {
-                    const extensionPath = self.extensions[key];
-                    void self.rawConnection.loadExtension(extensionPath, function (err) {
-                        cb(err);
-                    });
-                }
-            }, function (err) {
-                callback(err);
-            });
+        }, function (err) {
+            callback(err);
         });
     }
 
@@ -165,16 +202,11 @@ class SqliteAdapter {
         try {
             if (self.rawConnection) {
                 //close connection
-                self.rawConnection.close(function () {
-                    // clear rawConnection
-                    self.rawConnection = null;
-                    //and finally return
-                    callback();
-                });
+                self.rawConnection.close();
+                // clear rawConnection
+                self.rawConnection = null;
             }
-            else {
-                callback();
-            }
+            return callback();
         }
         catch (err) {
             this.logger.warn('An error occurred while closing database.');
@@ -305,7 +337,7 @@ class SqliteAdapter {
                     // set transaction mode before begin
                     self.transaction = true;
                     //begin transaction
-                    self.rawConnection.run('BEGIN TRANSACTION;', undefined, function (err) {
+                    self.rawConnection.run('BEGIN TRANSACTION;', [], function (err) {
                         if (err) {
                             // reset transaction mode
                             delete self.transaction;
@@ -316,14 +348,14 @@ class SqliteAdapter {
                             fn(function (err) {
                                 if (err) {
                                     // rollback transaction
-                                    return self.rawConnection.run('ROLLBACK;', undefined, function () {
+                                    return self.rawConnection.run('ROLLBACK;', [], function () {
                                         // reset transaction mode on error
                                         delete self.transaction;
                                         return callback(err);
                                     });
                                 }
                                 // commit transaction
-                                self.rawConnection.run('COMMIT;', undefined, function (err) {
+                                self.rawConnection.run('COMMIT;', [], function (err) {
                                     // reset transaction mode on error
                                     delete self.transaction;
                                     return callback(err);
