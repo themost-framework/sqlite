@@ -1,6 +1,7 @@
 import { babel } from '@rollup/plugin-babel';
 import * as pkg from './package.json';
 import dts from 'rollup-plugin-dts';
+import replace from 'rollup-plugin-replace';
 
 export default [
     {
@@ -23,7 +24,12 @@ export default [
             sourcemap: true
         },
         external: Object.keys(pkg.dependencies).concat(Object.keys(pkg.peerDependencies)),
-        plugins: [babel({ babelHelpers: 'bundled' })]
+        plugins: [
+            replace({
+                '__dirname': 'import.meta?.dirname'
+            }),
+            babel({ babelHelpers: 'bundled' })
+        ]
     },
     {
         input: 'src/index.d.ts',
