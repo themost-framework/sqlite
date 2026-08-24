@@ -27,11 +27,22 @@ class TestApplication extends DataApplication {
         // add adapter type
         const name = 'SQLite Data Adapter';
         const invariantName = 'sqlite';
-        dataConfiguration.adapterTypes.set(invariantName, {
+        const adapterType = {
             name,
             invariantName,
             createInstance
-        });
+        };
+        if (dataConfiguration.adapterTypes instanceof Map) {
+            dataConfiguration.adapterTypes.set(invariantName, adapterType);
+        } else {
+            // backward compatibility with old versions of @themost/data
+            Object.defineProperty(dataConfiguration.adapterTypes, invariantName, {
+                configurable: true,
+                enumerable: true,
+                writable: true,
+                value: adapterType
+            });
+        }
         dataConfiguration.adapters.push({
             name: 'test',
             invariantName: 'sqlite',
