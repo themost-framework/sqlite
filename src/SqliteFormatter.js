@@ -409,6 +409,10 @@ class SqliteFormatter extends SqlFormatter {
         if (expr instanceof QueryField) {
             return `json_group_array(${this.escape(expr)})`;
         }
+        // noinspection JSUnresolvedReference
+        if (expr && expr.$name) {
+            return `json_agg(${this.escape(expr)})`;
+        }
         if (expr && expr.$select) {
             // noinspection JSUnresolvedReference
             if (typeof this.$query !== 'function') {
