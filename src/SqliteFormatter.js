@@ -1,7 +1,7 @@
 // MOST Web Framework Codename Zero Gravity Copyright (c) 2017-2022, THEMOST LP
 
 import { sprintf } from 'sprintf-js';
-import { SqlFormatter, QueryField } from '@themost/query';
+import {SqlFormatter, QueryField} from '@themost/query';
 import { isObjectDeep } from './isObjectDeep';
 const REGEXP_SINGLE_QUOTE=/\\'/g;
 const SINGLE_QUOTE_ESCAPE ='\'\'';
@@ -403,9 +403,38 @@ class SqliteFormatter extends SqlFormatter {
     }
 
     /**
-     * @param {{ $jsonGet: Array<*> }} expr
+     * @param {{ $jsonGet: Array<*> } || { $select: * }} expr
      */
     $jsonGroupArray(expr) {
+        if (expr instanceof QueryField) {
+            return `json_group_array(${this.escape(expr)})`;
+        }
+        // noinspection JSUnresolvedReference
+        if (expr && expr.$name) {
+            return `json_agg(${this.escape(expr)})`;
+        }
+        if (expr && expr.$select) {
+            // noinspection JSUnresolvedReference
+            if (typeof this.$query !== 'function') {
+                throw new Error('Invalid query expression. The given expression is a select expression but the current formatter does not support formatting inner select expressions. Please provide a valid query formatter that supports inner select expressions.');
+            }
+            // get select fields
+            const [key] = Object.keys(expr.$select);
+            const select = expr.$select[key];
+            if (!Array.isArray(select) || select.length === 0) {
+                throw new Error('Invalid json group array expression. Expected an array of select fields');
+            }
+            // wrap the first select field with json_group_array function
+            select[0] = {
+                $value: {
+                    $jsonGroupArray: [
+                        select[0]
+                    ]
+                }
+            }
+            // noinspection JSUnresolvedReference
+            return `${this.$query(expr)}`;
+        }
         const [key] = Object.keys(expr);
         if (key !== '$jsonObject') {
             throw new Error('Invalid json group array expression. Expected a json object expression');
