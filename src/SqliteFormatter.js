@@ -420,6 +420,7 @@ class SqliteFormatter extends SqlFormatter {
             if (!Array.isArray(select) || select.length === 0) {
                 throw new Error('Invalid json group array expression. Expected an array of select fields');
             }
+            // wrap the first select field with json_group_array function
             select[0] = {
                 $value: {
                     $jsonGroupArray: [

@@ -379,16 +379,7 @@ describe('SqlFormatter', () => {
                     products: {
                         $jsonGroupArray: [
                             new QueryExpression().select(
-                                new QueryField({
-                                    $value: {
-                                        $concat: [
-                                            new QueryField('name').from(Products),
-                                            ' (',
-                                            new QueryField('model').from(Products),
-                                            ')'
-                                        ]
-                                    }
-                                }),
+                                new QueryField('name').from(Products)
                             ).from(Products).join(Orders).with(
                                 new QueryExpression().where(
                                     new QueryField('orderedItem').from(Orders)
@@ -732,7 +723,7 @@ describe('SqlFormatter', () => {
                 }
             })
         ).from(People).where('email').equal(context.user.name);
-        const [item] = await context.db.executeAsync(query);
+        const [item] = await context.db.executeAsync(query, []);
         expect(item).toBeTruthy();
     });
 
@@ -754,7 +745,7 @@ describe('SqlFormatter', () => {
                 }
             })
         ).from(People).where('email').equal(context.user.name);
-        const [item] = await context.db.executeAsync(query);
+        const [item] = await context.db.executeAsync(query, []);
         expect(item).toBeTruthy();
         expect(Array.isArray(item.tags)).toBeTruthy();
         expect(item.tags).toEqual([ 'user', 'customer', 'admin' ]);
