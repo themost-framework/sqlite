@@ -368,13 +368,6 @@ class SqliteFormatter extends SqlFormatter {
                 }));
                 return previous;
             }, []);
-            if (args.length === 1) {
-                const [arg] = args;
-                const [key] = Object.keys(arg);
-                if (key === '$jsonGroupArray') {
-                    return `(${this.format(expr)})`;
-                }
-            }
             const [key] = Object.keys(expr.$select);
             // prepare select expression to return json array
             expr.$select[key] = [
@@ -467,6 +460,13 @@ class SqliteFormatter extends SqlFormatter {
                 previous.push.apply(previous, expr.$select[key]);
                 return previous;
             }, []);
+            if (args.length === 1) {
+                const [arg] = args;
+                const [key] = Object.keys(arg);
+                if (key === '$jsonGroupArray') {
+                    return `(${this.format(expr)})`;
+                }
+            }
             const [key] = Object.keys(expr.$select);
             // prepare select expression to return json array   
             expr.$select[key] = [
