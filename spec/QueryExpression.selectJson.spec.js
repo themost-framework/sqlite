@@ -364,44 +364,6 @@ describe('SqlFormatter', () => {
         });
     });
 
-    it('should use jsonArray and format query expressions', async () => {
-        await app.executeInTestTranscaction(async (context) => {
-            const People = new QueryEntity('PersonData');
-            const Products = new QueryEntity('ProductData');
-            const Orders = new QueryEntity('OrderData');
-            const query = new QueryExpression().select(
-                'id',
-                'familyName',
-                'givenName',
-                'jobTitle',
-                'email',
-                new QueryField({
-                    products: {
-                        $jsonGroupArray: [
-                            new QueryExpression().select(
-                                new QueryField('name').from(Products)
-                            ).from(Products).join(Orders).with(
-                                new QueryExpression().where(
-                                    new QueryField('orderedItem').from(Orders)
-                                ).equal(
-                                    new QueryField('id').from(Products)
-                                )
-                            ).where(
-                                new QueryField('customer').from(Orders)
-                            ).equal(
-                                new QueryField('id').from(People)
-                            )
-                        ]
-                    }
-                })
-            ).from(People).where('email').equal('eric.thomas@example.com');
-            const [item] = await context.db.executeAsync(query, []);
-            expect(item).toBeTruthy();
-            expect(item.products).toBeTruthy();
-            expect(Array.isArray(item.products)).toEqual(true);
-        });
-    });
-
     it('should use jsonObject in ad-hoc queries', async () => {
         await app.executeInTestTranscaction(async (context) => {
             const {viewAdapter: Orders} = context.model('Order');
@@ -784,5 +746,84 @@ describe('SqlFormatter', () => {
         expect(keys.length).toBe(2);
         expect(keys).toContain('streetAddress');
         expect(keys).toContain('postalCode');
+    });
+
+    it('should use jsonArray and format query expressions', async () => {
+            const People = new QueryEntity('PersonData');
+            const Products = new QueryEntity('ProductData');
+            const Orders = new QueryEntity('OrderData');
+            const query = new QueryExpression().select(
+                'id',
+                'familyName',
+                'givenName',
+                'jobTitle',
+                'email',
+                new QueryField({
+                    products: {
+                        $jsonGroupArray: [
+                            new QueryExpression().select(
+                                new QueryField('name').from(Products)
+                            ).from(Products).join(Orders).with(
+                                new QueryExpression().where(
+                                    new QueryField('orderedItem').from(Orders)
+                                ).equal(
+                                    new QueryField('id').from(Products)
+                                )
+                            ).where(
+                                new QueryField('customer').from(Orders)
+                            ).equal(
+                                new QueryField('id').from(People)
+                            )
+                        ]
+                    }
+                })
+            ).from(People).where('email').equal('eric.thomas@example.com');
+            const [item] = await context.db.executeAsync(query, []);
+            expect(item).toBeTruthy();
+            expect(item.products).toBeTruthy();
+            expect(Array.isArray(item.products)).toEqual(true);
+            for (const product of item.products) {
+                expect(typeof product).toBe('string');
+            }
+    });
+
+    it('should use jsonArray and format inner select expressions', async () => {
+            const People = new QueryEntity('PersonData');
+            const Products = new QueryEntity('ProductData');
+            const Orders = new QueryEntity('OrderData');
+            const query = new QueryExpression().select(
+                'id',
+                'familyName',
+                'givenName',
+                'jobTitle',
+                'email',
+                new QueryField({
+                    products: {
+                        $jsonArray: [
+                            new QueryExpression().select(
+                                new QueryField('name').from(Products),
+                                new QueryField('model').from(Products)
+                            ).from(Products).join(Orders).with(
+                                new QueryExpression().where(
+                                    new QueryField('orderedItem').from(Orders)
+                                ).equal(
+                                    new QueryField('id').from(Products)
+                                )
+                            ).where(
+                                new QueryField('customer').from(Orders)
+                            ).equal(
+                                new QueryField('id').from(People)
+                            )
+                        ]
+                    }
+                })
+            ).from(People).where('email').equal('eric.thomas@example.com');
+            const [item] = await context.db.executeAsync(query, []);
+            expect(item).toBeTruthy();
+            expect(item.products).toBeTruthy();
+            expect(Array.isArray(item.products)).toEqual(true);
+            for (const product of item.products) {
+                expect(typeof product).toBe('object');
+            }
     });
 });
