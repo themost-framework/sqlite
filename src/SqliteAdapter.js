@@ -1,6 +1,6 @@
 // MOST Web Framework Codename Zero Gravity Copyright (c) 2017-2022, THEMOST LP
 
-import { sprintf } from 'sprintf-js';
+import { printf as sprintf } from 'fast-printf';
 import {waterfall, eachSeries} from 'async';
 import {TraceUtils}  from '@themost/common';
 import { QueryExpression, QueryField, SqlUtils } from '@themost/query';

@@ -1,6 +1,6 @@
 // MOST Web Framework Codename Zero Gravity Copyright (c) 2017-2022, THEMOST LP
 
-import { sprintf } from 'sprintf-js';
+import { printf as sprintf } from 'fast-printf';
 import {SqlFormatter, QueryField} from '@themost/query';
 import { isObjectDeep } from './isObjectDeep';
 const REGEXP_SINGLE_QUOTE=/\\'/g;
