@@ -31,6 +31,6 @@ jobs:
       - run: npm i
       - run: npx @themost/peers
       - run: npm run build
-      - run: npm publish
+      - run: npm publish --tag ${{ github.event.release.target_commitish }} --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
