@@ -14,8 +14,8 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: 16
-      - run: npm ci
+          node-version: 20
+      - run: npm i
       - run: npx @themost/peers
       - run: npm test
 
@@ -26,11 +26,11 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: 16
+          node-version: 20
           registry-url: https://registry.npmjs.org/
-      - run: npm ci
+      - run: npm i
       - run: npx @themost/peers
       - run: npm run build
-      - run: npm publish
+      - run: npm publish --tag ${{ github.event.release.target_commitish }} --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
