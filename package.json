@@ -7,6 +7,7 @@
   "module": "dist/index.esm.js",
   "scripts": {
     "test": "jest",
+    "postinstall": "node ./postinstall.js",
     "lint": "eslint . --ext src/**/*.js",
     "build": "rimraf dist && rollup --config rollup.config.js"
   },
