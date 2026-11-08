@@ -1,10 +1,15 @@
+// noinspection NpmUsedModulesInstalled
 import globals from 'globals';
 import babelParser from '@babel/eslint-parser';
+// noinspection NpmUsedModulesInstalled
 import typescriptPlugin from '@typescript-eslint/eslint-plugin';
+// noinspection NpmUsedModulesInstalled
 import tsParser from '@typescript-eslint/parser';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+// noinspection NpmUsedModulesInstalled
 import js from '@eslint/js';
+// noinspection NpmUsedModulesInstalled
 import { FlatCompat } from '@eslint/eslintrc';
 import jest from 'eslint-plugin-jest';
 
@@ -16,6 +21,7 @@ const compat = new FlatCompat({
     allConfig: js.configs.all
 });
 
+// noinspection JSUnresolvedReference
 export default [{
     ignores: ['**/dist', '**/node_modules'],
 }, {

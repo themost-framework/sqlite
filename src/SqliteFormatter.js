@@ -5,6 +5,7 @@ import {SqlFormatter, QueryField} from '@themost/query';
 import { isObjectDeep } from './isObjectDeep';
 const REGEXP_SINGLE_QUOTE=/\\'/g;
 const SINGLE_QUOTE_ESCAPE ='\'\'';
+// eslint-disable-next-line no-unused-vars
 const REGEXP_DOUBLE_QUOTE=/\\"/g;
 const DOUBLE_QUOTE_ESCAPE = '"';
 const REGEXP_SLASH=/\\\\/g;

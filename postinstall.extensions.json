@@ -1,0 +1,59 @@
+{
+    "sqlean": [
+        {
+            "version": "0.29.0",
+            "os": [
+                "linux"
+            ],
+            "cpu": [
+                "x64"
+            ],
+            "resolved": "https://github.com/nalgeon/sqlean/releases/download/0.29.0/sqlean-linux-x64.zip",
+            "integrity": "sha512-919d03f01ea53a1d2dfe5cf13cb72b97268eb52dd626632b24a53c268038c25771e7e8b6827f105d2cc474779f4ca81a23ed41ef0485d15730e405ea5c853699"
+        },
+        {
+            "version": "0.29.0",
+            "os": [
+                "linux"
+            ],
+            "cpu": [
+                "arm64"
+            ],
+            "resolved": "https://github.com/nalgeon/sqlean/releases/download/0.29.0/sqlean-linux-arm64.zip",
+            "integrity": "sha512-9e2468058b27a1fcea15e8689e3ff1bd89bb905899987a88392a7e4cd2635eab6c5c4eedc12cba47ecc7bf661e6e83dc00090c1167c8d9a1561f7d8f499fbac2"
+        },
+        {
+            "version": "0.29.0",
+            "os": [
+                "win32"
+            ],
+            "cpu": [
+                "x64"
+            ],
+            "resolved": "https://github.com/nalgeon/sqlean/releases/download/0.29.0/sqlean-win-x64.zip",
+            "integrity": "sha512-696997fb3309cc3472b8a30dc135e6a0b2997246d27236aa740d295d3af9c31cd7e4564f71fd10a992dec57c3164c35b4187d2ef2bbc288e86204951f97914ed"
+        },
+        {
+            "version": "0.29.0",
+            "os": [
+                "darwin"
+            ],
+            "cpu": [
+                "x64"
+            ],
+            "resolved": "https://github.com/nalgeon/sqlean/releases/download/0.29.0/sqlean-macos-x64.zip",
+            "integrity": "sha512-69e9c8683c125d80e190fef97b7ede6ae0c91f4ec8dc7f51136c1ce7b87654f73ad3f28f4443bb1c46677adb537edee1a94eda71415592c38c0aea70a860cafc"
+        },
+        {
+            "version": "0.29.0",
+            "os": [
+                "darwin"
+            ],
+            "cpu": [
+                "arm64"
+            ],
+            "resolved": "https://github.com/nalgeon/sqlean/releases/download/0.29.0/sqlean-macos-arm64.zip",
+            "integrity": "sha512-b62f37efed95ed6136653b78a84cbc89e018e340e8b9fb83368b11d46f037cce005ffd5b12f33b22b9ceeb0dea1256e7fc9e200da3c53fcbe92fa4c6f4de995f"
+        }
+    ]
+}
