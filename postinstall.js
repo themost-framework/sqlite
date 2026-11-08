@@ -2,7 +2,6 @@ const os = require('os');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
-const packageJson = require('./package.json');
 const unzipper = require('unzipper');
 const postinstallExtensions = require('./postinstall.extensions.json');
 const semver = require('semver');
@@ -24,31 +23,31 @@ class NpmLogger {
     }
 
     error() {
-        this.logLevel >= 1 && this.write('error:', ...arguments);
+        this.logLevel >= 1 && this.write('npm', 'error:', ...arguments);
     }
 
     warn() {
-        this.logLevel >= 2 && this.write('warn:', ...arguments);
+        this.logLevel >= 2 && this.write('npm', 'warn:', ...arguments);
     }
 
     log() {
-       this.logLevel >= 3 && this.write(...arguments);
+       this.logLevel >= 3 && this.write('npm', 'notice:', ...arguments);
     }
 
     notice() {
-        this.logLevel >= 3 && this.write('notice:', ...arguments);
+        this.logLevel >= 3 && this.write('npm', 'notice:', ...arguments);
     }
 
     info() {
-        this.logLevel >= 6 && this.write('info:', ...arguments);
+        this.logLevel >= 6 && this.write('npm', 'info:', ...arguments);
     }
 
     verbose() {
-        this.logLevel >= 7 && this.write('verbose:', ...arguments);
+        this.logLevel >= 7 && this.write('npm', 'verbose:', ...arguments);
     }
 
     silly() {
-        this.logLevel >= 8 && this.write('silly:', ...arguments);
+        this.logLevel >= 8 && this.write('npm', 'silly:', ...arguments);
     }
     
 }
@@ -102,47 +101,25 @@ function unzipAsync(zipFile, dest) {
         fs.createReadStream(zipFile).pipe(unzipper.Extract({ path: dest })).on('finish', resolve).on('error', reject);
     })
 }
+
+function untarAsync(tarFile, dest) {
+    return new Promise((resolve, reject) => {
+        tar.x({
+            file: tarFile,
+            cwd: dest
+        }).then(() => {
+            resolve();
+        }).catch((err) => {
+            reject(err);
+        });
+    });
+}
+
 (async function main() {
     const logger = new NpmLogger();
-    const rootUrl = 'https://github.com/nalgeon/sqlean/releases/download/';
-    const version = packageJson.config.sqleanVersion;
-    // get platform e.g. windows, macos, linux
-    let platform = os.platform();
-    // get architecture e.g. x64, arm64
-    let arch = os.arch();
-    switch (platform) {
-        case 'win32':
-            platform = 'win';
-            break;
-        case 'darwin':
-            platform = 'macos';
-            arch = arch === 'x64' ? 'x86' : arch;
-            break;
-        case 'linux':
-            platform = 'linux';
-            arch = arch === 'x64' ? 'x86' : arch;
-            break;
-        default:
-            // eslint-disable-next-line no-case-declarations
-            const err = new Error('Unsupported platform ' + platform);
-            err.code = 'UNSUPPORTED_PLATFORM';
-            throw err;
-    }
-    // get file name based on platform and arch
-    const file = `sqlean-${platform}-${arch}.zip`;
-    // format url
-    const url = `${rootUrl}${version}/${file}`;
-    // download zip file
-    const zipFile = path.join(os.tmpdir(), file);
-    logger.notice('Downloading sqlite extensions');
-    await downloadAsync(url, zipFile);
-    // destination directory
-    const dest = path.resolve(__dirname, './lib');
-    // create destination directory
-    await mkdirAsync(dest);
+    await mkdirAsync(path.resolve(__dirname, './lib'));
     logger.notice('Installing sqlite extensions');
-    // unzip file
-    await unzipAsync(zipFile, dest);
+    return Promise.resolve();
 })().then(() => {
     const platform = os.platform();
     const arch = os.arch();
@@ -173,7 +150,9 @@ function unzipAsync(zipFile, dest) {
     }).filter((option) => typeof option !== 'undefined');
 
     return Promise.all(extensions.map((extension) => {
-        const tmpDest = path.join(os.tmpdir(), `${extension.name}.tar.gz`);
+        const resolved = new URL(extension.resolved);
+        const filename = path.basename(resolved.pathname);
+        const tmpDest = path.join(os.tmpdir(), filename);
         const logger = new NpmLogger();
         logger.notice(`Downloading ${extension.name} from ${extension.resolved}`);
         return downloadAsync(extension.resolved, tmpDest).then(() => {
@@ -193,11 +172,17 @@ function unzipAsync(zipFile, dest) {
                 }
             }
             return new Promise((resolve, reject) => {
-                logger.notice(`Extracting ${extension.name}`);
-                return tar.x({
-                    file: tmpDest,
-                    cwd: path.resolve(__dirname, './lib')
-                }).then(() => {
+                logger.notice(`Extracting ${extension.name} from ${filename}`);
+                // get file extension
+                const extname = path.extname(tmpDest);
+                if (extname === '.zip') {
+                    return unzipAsync(tmpDest, path.resolve(__dirname, './lib')).then(() => {
+                        resolve();
+                    }).catch((err) => {
+                        reject(err);
+                    });
+                }
+                return untarAsync(tmpDest, path.resolve(__dirname, './lib')).then(() => {
                     resolve();
                 }).catch((err) => {
                     reject(err);
