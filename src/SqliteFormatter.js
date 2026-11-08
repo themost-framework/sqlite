@@ -303,7 +303,7 @@ class SqliteFormatter extends SqlFormatter {
     }
 
     $toGuid(expr) {
-        return sprintf('uuid_str(crypto_md5(%s))', this.escape(expr));
+        return sprintf('uuid_str(md5_hex(%s))', this.escape(expr));
     }
 
     $toInt(expr) {

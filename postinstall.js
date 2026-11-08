@@ -4,6 +4,54 @@ const fs = require('fs');
 const path = require('path');
 const packageJson = require('./package.json');
 const unzipper = require('unzipper');
+const postinstallExtensions = require('./postinstall.extensions.json');
+const semver = require('semver');
+const tar = require('tar');
+
+class NpmLogger {
+
+    static logLevels = {
+        silent: 0, error: 1, warn: 2, notice: 3, http: 4, timing: 5, info: 6, verbose: 7, silly: 8
+    };
+
+    constructor() {
+        const npm_config_loglevel = process.env.npm_config_loglevel || 'notice';
+        this.logLevel = NpmLogger.logLevels[npm_config_loglevel];
+    }
+
+    write() {
+        process.stdout.write(Array.from(arguments).join(' ') + '\n');
+    }
+
+    error() {
+        this.logLevel >= 1 && this.write('error:', ...arguments);
+    }
+
+    warn() {
+        this.logLevel >= 2 && this.write('warn:', ...arguments);
+    }
+
+    log() {
+       this.logLevel >= 3 && this.write(...arguments);
+    }
+
+    notice() {
+        this.logLevel >= 3 && this.write('notice:', ...arguments);
+    }
+
+    info() {
+        this.logLevel >= 6 && this.write('info:', ...arguments);
+    }
+
+    verbose() {
+        this.logLevel >= 7 && this.write('verbose:', ...arguments);
+    }
+
+    silly() {
+        this.logLevel >= 8 && this.write('silly:', ...arguments);
+    }
+    
+}
 
 function mkdirAsync(dir) {
     return new Promise((resolve, reject) => {
@@ -55,6 +103,7 @@ function unzipAsync(zipFile, dest) {
     })
 }
 (async function main() {
+    const logger = new NpmLogger();
     const rootUrl = 'https://github.com/nalgeon/sqlean/releases/download/';
     const version = packageJson.config.sqleanVersion;
     // get platform e.g. windows, macos, linux
@@ -85,23 +134,88 @@ function unzipAsync(zipFile, dest) {
     const url = `${rootUrl}${version}/${file}`;
     // download zip file
     const zipFile = path.join(os.tmpdir(), file);
-    process.stdout.write('Downloading sqlite extensions\n');
+    logger.notice('Downloading sqlite extensions');
     await downloadAsync(url, zipFile);
     // destination directory
     const dest = path.resolve(__dirname, './lib');
     // create destination directory
     await mkdirAsync(dest);
-    process.stdout.write('Installing sqlite extensions\n');
+    logger.notice('Installing sqlite extensions');
     // unzip file
     await unzipAsync(zipFile, dest);
-})().then(function(){
+})().then(() => {
+    const platform = os.platform();
+    const arch = os.arch();
+    const keys = Object.keys(postinstallExtensions);
+    const extensions = keys.map((name) => {
+        /**
+         * @type {{os: string[], cpu: string[], name: string, version?: string, engines: { [k: string]: string }, resolved: string, integrity: string}[]}
+         */
+        const options = postinstallExtensions[name];
+        const found = options.filter((option) => option.os.includes(platform) && option.cpu.includes(arch));
+        if (found.length === 1) {
+            return Object.assign({}, found[0], {
+                name
+            });
+        } else if (found.length > 1) {
+            // handle multiple found options
+            for (const option of found) {
+                // get node engine version
+                const nodeVersion = process.versions.node;
+                const engineVersion = option.engines && option.engines.node;
+                if (engineVersion && semver.satisfies(nodeVersion, engineVersion)) {
+                    return Object.assign({}, option, {
+                        name
+                    });
+                }
+            }
+        }
+    }).filter((option) => typeof option !== 'undefined');
+
+    return Promise.all(extensions.map((extension) => {
+        const tmpDest = path.join(os.tmpdir(), `${extension.name}.tar.gz`);
+        const logger = new NpmLogger();
+        logger.notice(`Downloading ${extension.name} from ${extension.resolved}`);
+        return downloadAsync(extension.resolved, tmpDest).then(() => {
+            // validate integrity
+            const integrity = extension.integrity;
+            if (integrity) {
+                logger.notice(`Validating integrity for ${extension.name}`);
+                const [algo, checksum] = integrity.split('-');
+                const crypto = require('crypto');
+                const hash = crypto.createHash(algo);
+                const fileBuffer = fs.readFileSync(tmpDest);
+                // noinspection JSCheckFunctionSignatures
+                hash.update(fileBuffer);
+                const calculatedHash = hash.digest('hex');
+                if (calculatedHash !== checksum) {
+                    throw new Error(`Integrity check failed for ${extension.name}. Expected ${integrity}, but got ${calculatedHash}`);
+                }
+            }
+            return new Promise((resolve, reject) => {
+                logger.notice(`Extracting ${extension.name}`);
+                return tar.x({
+                    file: tmpDest,
+                    cwd: path.resolve(__dirname, './lib')
+                }).then(() => {
+                    resolve();
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        });
+    }));
+
+}).then(function(){
     return process.exit(0);
 }).catch(function (err) {
+    const logger = new NpmLogger();
     if (err.code === 'UNSUPPORTED_PLATFORM') {
-        process.stderr.write(err.message + '\n');
-        process.stdout.write('SQLite extensions are not available for this platform.\n');
+        logger.error(err.message);
+        logger.error('SQLite extensions are not available for this platform');
         return process.exit(0);
     }
-    process.stderr.write(err.message);
+    logger.error(err.message);
+    logger.error(err.stack);
     return process.exit(1);
 });
