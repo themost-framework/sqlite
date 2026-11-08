@@ -28,6 +28,37 @@ describe('SqliteFormatter', () => {
         });
     });
 
+    it('should execute simultaneously', async () => {
+        const [actionStatusTypes, products] = await Promise.all([
+            (() => {
+                const ctx = app.createContext();
+                return ctx.model('ActionStatusType').silent().getItems().then(items => {
+                    return ctx.finalizeAsync().then(() => {
+                        return items;
+                    });
+                });
+            })(),
+            (() => {
+                const ctx = app.createContext();
+                return ctx.model('Product').silent().getItems().then(items => {
+                    return ctx.finalizeAsync().then(() => {
+                        return items;
+                    });
+                });
+            })(),
+            (() => {
+                const ctx = app.createContext();
+                return ctx.model('Order').where('orderStatus/alternateName').equal('Pending').silent().getItems().then(items => {
+                    return ctx.finalizeAsync().then(() => {
+                        return items;
+                    });
+                });
+            })()
+        ]);
+        expect(Array.isArray(actionStatusTypes)).toBeTruthy();
+        expect(Array.isArray(products)).toBeTruthy();
+    });
+
     it('should query data', async () => {
         await app.executeInTestTranscaction(async (context) => {
             const item = await context.model('ActionStatusType')

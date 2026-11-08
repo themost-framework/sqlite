@@ -7,7 +7,8 @@ import { QueryExpression, QueryField, SqlUtils } from '@themost/query';
 import { AsyncSeriesEventEmitter, before, after } from '@themost/events';
 import { SqliteFormatter } from './SqliteFormatter';
 import { SqliteExtensions } from './SqliteExtensions';
-import Database from 'better-sqlite3';
+// noinspection JSUnresolvedReference
+import { Database } from './SqliteDatabase';
 
 if (typeof Database.prototype.run !== 'function') {
     Object.assign(Database.prototype, {
@@ -26,6 +27,11 @@ if (typeof Database.prototype.run !== 'function') {
                 const info = params ? stmt.run(...params) : stmt.run();
                 return callback(null, info);
             } catch (err) {
+                if (Object.prototype.hasOwnProperty.call(err, 'errstr')) {
+                    if (err.errstr === 'database is locked') {
+                        Object.assign(err, { code: 'SQLITE_BUSY' });
+                    }
+                }
                 return callback(err);
             }
         },
@@ -169,7 +175,7 @@ class SqliteAdapter {
         if (self.rawConnection) {
             return callback();
         }
-        self.rawConnection = new Database(self.options.database);
+        self.rawConnection = new Database(self.options.database, { allowExtension: true });
         //try to open or create database
         void eachSeries(Object.keys(self.extensions), function (key, cb) {
             if (Object.prototype.hasOwnProperty.call(self.extensions, key)) {
