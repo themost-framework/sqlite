@@ -10,7 +10,7 @@
                 "ia32",
                 "arm64"
             ],
-            "resolved": "https://github.com/asg017/sqlite-regex/releases/download/v0.2.4-alpha.1/sqlite-regex-v0.2.4-alpha.1-loadable-linux-x86_64.tar",
+            "resolved": "https://github.com/asg017/sqlite-regex/releases/download/v0.2.4-alpha.1/sqlite-regex-v0.2.4-alpha.1-loadable-linux-x86_64.tar.gz",
             "integrity": "sha512-1b40ca85e6372ae59f8e2ce5ab1018a0216c2e800067145ccb59746f9e0c9175fc33e44a0ff35175fe527e0bf6f1df99520a40966f51d5331a73a8b1a435cf39"
         },
         {
