@@ -1,6 +1,6 @@
 {
   "name": "@themost/sqlite",
-  "version": "3.20.2",
+  "version": "3.20.3",
   "description": "MOST Web Framework SQLite Adapter",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -39,7 +39,7 @@
     "unzipper": "^0.12.5"
   },
   "engines": {
-    "node": "=20"
+    "node": "18.x || 20.x"
   },
   "devDependencies": {
     "@babel/cli": "^7.25.9",
