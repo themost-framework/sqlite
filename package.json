@@ -1,6 +1,6 @@
 {
   "name": "@themost/sqlite",
-  "version": "3.26.2",
+  "version": "3.20.2",
   "description": "MOST Web Framework SQLite Adapter",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -31,6 +31,7 @@
   "dependencies": {
     "@themost/events": "^1.5.0",
     "async": "^2.6.4",
+    "better-sqlite3": "^11.10.0",
     "fast-printf": "^1.6.10",
     "lodash": "^4.17.23",
     "semver": "^7.8.6",
@@ -56,6 +57,7 @@
     "@themost/peers": "^1.0.2",
     "@themost/query": "^2.15.2",
     "@themost/xml": "^2.5.2",
+    "@types/better-sqlite3": "^9.6.0",
     "@types/jasmine": "^6.0.0",
     "dotenv": "^16.0.0",
     "eslint": "^9.13.0",

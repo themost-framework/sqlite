@@ -1,4 +1,4 @@
-import {DatabaseSync as Database} from 'node:sqlite';
+import Database from 'better-sqlite3';
 export {
     Database
 }
