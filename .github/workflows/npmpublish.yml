@@ -31,6 +31,7 @@ jobs:
       - run: npm i
       - run: npx @themost/peers
       - run: npm run build
-      - run: npm publish --tag lts-20 --tag lts-18
+      - run: npm publish --tag lts-20
+      - run: npm dist-tag add @themost/sqlite@$(npm view @themost/sqlite@lts-20 version) lts-18
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
